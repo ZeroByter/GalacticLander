@@ -5,28 +5,77 @@ using UnityEngine;
 [RequireComponent(typeof(MeshRenderer))]
 public class MarchingSquaresManager : MonoBehaviour
 {
+    private static MarchingSquaresManager Singleton;
+
+    public static void SetData(int width, int height, float[] data)
+    {
+        if (Singleton == null) return;
+
+        Singleton.width = width;
+        Singleton.height = height;
+        Singleton.data = data;
+    }
+
+    public static void AddValue(int x, int y, float value)
+    {
+        if (Singleton == null) return;
+
+        var index = x + y * Singleton.width;
+
+        if (index < 0 || index > Singleton.data.Length) return;
+
+        Singleton.data[index] = Mathf.Clamp01(Singleton.data[index] + value);
+    }
+
+    //Reverse offset to subtract instead of add
+    public static void AddValues(Vector2 center, float size, float offset = 0.6f)
+    {
+        if (Singleton == null) return;
+
+        var min = new Vector2Int(Mathf.FloorToInt(center.x - size / 2 - Singleton.size * 2), Mathf.FloorToInt(center.y - size / 2 - Singleton.size * 2));
+        var max = new Vector2Int(Mathf.CeilToInt(center.x + size / 2 + Singleton.size * 2), Mathf.CeilToInt(center.y + size / 2 + Singleton.size * 2));
+
+        for(int y = min.y; y < max.y; y++)
+        {
+            for(int x = min.x; x < max.x; x++)
+            {
+                AddValue(x, y, Mathf.Clamp01(Vector2.Distance(new Vector2(x, y), center) / size * offset));
+                AddValue(x + 1, y, Mathf.Clamp01(Vector2.Distance(new Vector2(x + 1, y), center) / size * offset));
+                AddValue(x, y + 1, Mathf.Clamp01(Vector2.Distance(new Vector2(x, y + 1), center) / size * offset));
+                AddValue(x + 1, y + 1, Mathf.Clamp01(Vector2.Distance(new Vector2(x + 1, y + 1), center) / size * offset));
+            }
+        }
+    }
+
+    public static void GenerateMesh()
+    {
+        if (Singleton == null) return;
+
+        Singleton._GenerateMesh();
+    }
+
     private MeshFilter meshFilter;
-    private MeshRenderer meshRenderer;
+
+    private Mesh mesh;
 
     private float isoLevel = 0.5f;
+    private float size = 0.1f;
+
+    private int width;
+    private int height;
+
+    private float[] data;
 
     private void Awake()
     {
         meshFilter = GetComponent<MeshFilter>();
-        meshRenderer = GetComponent<MeshRenderer>();
 
-        var width = 200;
-        var height = 100;
-        var size = 0.1f;
-        var cornerData = new float[width * height + width + 1];
+        mesh = new Mesh();
+        meshFilter.sharedMesh = mesh;
+    }
 
-        cornerData[GetCornerIndex(50, 50, width)] = 1f;
-        cornerData[GetCornerIndex(50, 51, width)] = 0.5f;
-        cornerData[GetCornerIndex(51, 50, width)] = 0.5f;
-        cornerData[GetCornerIndex(51, 51, width)] = 0.5f;
-
-        var mesh = new Mesh();
-
+    private void _GenerateMesh()
+    {
         var vertices = new List<Vector3>();
         var triangles = new List<int>();
 
@@ -44,16 +93,17 @@ public class MarchingSquaresManager : MonoBehaviour
 
                 var cornerValues = new float[]
                 {
-                    cornerData[GetCornerIndex(x, y, width)],
-                    cornerData[GetCornerIndex(x + 1, y, width)],
-                    cornerData[GetCornerIndex(x, y + 1, width)],
-                    cornerData[GetCornerIndex(x + 1, y + 1, width)]
+                    data[GetCornerIndex(x, y, width)],
+                    data[GetCornerIndex(x + 1, y, width)],
+                    data[GetCornerIndex(x, y + 1, width)],
+                    data[GetCornerIndex(x + 1, y + 1, width)]
                 };
 
                 var cubeIndex = GetSquareIndex(cornerValues[0], cornerValues[1], cornerValues[2], cornerValues[3]);
 
                 var verticesCount = vertices.Count;
 
+                #region Big ugly if-statements for generating squares
                 if (cubeIndex == 15)
                 {
                     vertices.Add(cornerLocations[0]);
@@ -359,13 +409,12 @@ public class MarchingSquaresManager : MonoBehaviour
                     triangles.Add(verticesCount + 2);
                     triangles.Add(verticesCount + 4);
                 }
+                #endregion
             }
         }
 
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
-
-        meshFilter.sharedMesh = mesh;
     }
 
     private int GetCornerIndex(int x, int y, int width)
