@@ -270,6 +270,9 @@ public class LevelEditorCursor : MonoBehaviour {
 
                     //here we actually place the new tile
                     if (Input.GetMouseButton(0) && placeTiles) {
+                        Debug.Log("placing tiles...");
+
+                        /*
                         //here we check if we are placing upon a tile, if yes, delete it
                         bool tileRemoved = true;
 
@@ -320,6 +323,7 @@ public class LevelEditorCursor : MonoBehaviour {
                                 RefreshTilesLayout();
                             }
                         }
+                        */
                     }
                 }
 
