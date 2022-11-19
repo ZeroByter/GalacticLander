@@ -90,6 +90,8 @@ public class LevelData {
 
     public List<LevelObject> levelData = new List<LevelObject>();
 
+    public float[] levelMapValues = new float[0];
+
     [NonSerialized]
     private List<Vector2> tiles = new List<Vector2>();
     [NonSerialized]
@@ -108,8 +110,8 @@ public class LevelData {
         timeCreated = DateTime.Now;
         lastModified = DateTime.Now;
 
-        levelData.Add(new LevelEntity("Ship Pads/Launch Pad") { canAdvancedModify = false, y = 0.69f, spriteName = "Landing Pads/Launch Pad Static Sprite" });
-        levelData.Add(new LevelEntity("Ship Pads/Land Pad") { canAdvancedModify = false, x = 4, y = 0.69f, spriteName = "Landing Pads/Land Pad Static Sprite" });
+        levelData.Add(new LevelEntity("Ship Pads/Launch Pad") { canAdvancedModify = false, y = 0.2f, spriteName = "Landing Pads/Launch Pad Static Sprite" });
+        levelData.Add(new LevelEntity("Ship Pads/Land Pad") { canAdvancedModify = false, x = 4, y = 0.2f, spriteName = "Landing Pads/Land Pad Static Sprite" });
     }
 
     public static LevelData LoadLevelData(string levelName) {

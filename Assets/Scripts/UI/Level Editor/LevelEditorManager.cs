@@ -61,7 +61,8 @@ public class LevelEditorManager : MonoBehaviour {
 
         mainCamera = Camera.main;
 
-        MarchingSquaresManager.CreateBlank(150, 150);
+        MarchingSquaresManager.CreateBlank();
+        MarchingSquaresManager.GenerateMesh();
 
         //awake is called as soon as the level editor scene is loaded
         if (LevelLoader.PlayTestingLevel) { //so if a level is being playtested, we can check so here
@@ -124,12 +125,12 @@ public class LevelEditorManager : MonoBehaviour {
 
             Vector2 mousePos = MainCameraController.Singletron.selfCamera.ScreenToWorldPoint(Input.mousePosition);
 
-            if (Input.GetMouseButtonDown(1)) {
+            if (Input.GetMouseButtonDown(2)) {
                 draggingStartLevelPosition = mainCamera.transform.position;
                 draggingStartMousePosition = Input.mousePosition;
             }
 
-            if (Input.GetMouseButton(1)) {
+            if (Input.GetMouseButton(2)) {
                 mainCamera.transform.position = new Vector3(0, 0, -30) + (Vector3)(draggingStartLevelPosition + ((Vector2)mainCamera.ScreenToWorldPoint(draggingStartMousePosition) - mousePos));
             }
 
@@ -198,6 +199,12 @@ public class LevelEditorManager : MonoBehaviour {
         Dictionary<Transform, LevelObject> logicEntitiesToConnect = new Dictionary<Transform, LevelObject>();
 
         LevelEditorLinesController.DestroyAllLines();
+
+        if(newData.levelMapValues != null)
+        {
+            MarchingSquaresManager.SetData(newData.levelMapValues);
+            MarchingSquaresManager.GenerateMesh();
+        }
 
         //Go through all entities and tiles in new loaded `LevelData` and instantiate them inside the level editor
         foreach (LevelObject obj in newData.levelData) {

@@ -8,27 +8,52 @@ public class MarchingSquaresManager : MonoBehaviour
 {
     private static MarchingSquaresManager Singleton;
 
-    public static void CreateBlank(int width, int height)
+    public static void CreateBlank()
     {
         if (Singleton == null) return;
+
+        var width = 150;
+        var height = 150;
 
         Singleton.width = width;
         Singleton.height = height;
         Singleton.data = new float[width * height + width + 1];
+        for(int i = 0; i < Singleton.data.Length; i++)
+        {
+            Singleton.data[i] = 1f;
+        }
+
+        var holeWidth = 40;
+        var holeHeight = 15;
+        var center = new Vector2(width / 2 + 9, height / 2 + holeHeight / 2);
+
+        var min = new Vector2Int(Mathf.FloorToInt(center.x - holeWidth / 2), Mathf.FloorToInt(center.y - holeHeight / 2));
+        var max = new Vector2Int(Mathf.CeilToInt(center.x + holeWidth / 2), Mathf.CeilToInt(center.y + holeHeight / 2));
+
+        for (int y = min.y; y < max.y; y++)
+        {
+            for (int x = min.x; x < max.x; x++)
+            {
+                AddValue(x, y, Mathf.Lerp(-0.5f, -1f, Mathf.InverseLerp(min.y, max.y, y)));
+            }
+        }
     }
 
-    public static void SetData(int width, int height, float[] data)
+    public static void SetData(float[] data)
     {
         if (Singleton == null) return;
 
-        Singleton.width = width;
-        Singleton.height = height;
+        Singleton.width = 150;
+        Singleton.height = 150;
         Singleton.data = data;
     }
 
     public static void AddValue(int x, int y, float value)
     {
         if (Singleton == null) return;
+
+        if (x < 3 || x > 150 - 3) return;
+        if (y < 3 || y > 150 - 3) return;
 
         var index = x + y * Singleton.width;
 
@@ -45,9 +70,9 @@ public class MarchingSquaresManager : MonoBehaviour
         var min = new Vector2Int(Mathf.FloorToInt(center.x - size / 2), Mathf.FloorToInt(center.y - size / 2));
         var max = new Vector2Int(Mathf.CeilToInt(center.x + size / 2), Mathf.CeilToInt(center.y + size / 2));
 
-        for(int y = min.y; y < max.y; y++)
+        for (int y = min.y; y < max.y; y++)
         {
-            for(int x = min.x; x < max.x; x++)
+            for (int x = min.x; x < max.x; x++)
             {
                 AddValue(x, y, (1 - Mathf.Clamp01(Vector2.Distance(new Vector2(x, y), center) / size * 2)) * offset);
                 AddValue(x + 1, y, (1 - Mathf.Clamp01(Vector2.Distance(new Vector2(x + 1, y), center) / size * 2)) * offset);
@@ -55,6 +80,13 @@ public class MarchingSquaresManager : MonoBehaviour
                 AddValue(x + 1, y + 1, (1 - Mathf.Clamp01(Vector2.Distance(new Vector2(x + 1, y + 1), center) / size * 2)) * offset);
             }
         }
+    }
+
+    public static float[] GetValues()
+    {
+        if (Singleton == null) return new float[0];
+
+        return Singleton.data;
     }
 
     public static void GenerateMesh()

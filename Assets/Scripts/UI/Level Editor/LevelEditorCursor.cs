@@ -224,16 +224,11 @@ public class LevelEditorCursor : MonoBehaviour {
                         screenPos = new Vector2(transform.parent.InverseTransformPoint(mousePos).x, transform.parent.InverseTransformPoint(mousePos).y);
                     }
 
-                    if (movingEntityData.canAdvancedModify) {
-                        //typical rotation and mirroring things
-                        if (movingEntityData.lockedRotation) {
-                            if (Input.GetKeyDown(KeyCode.Q)) SetRotation(rotation + 90);
-                            if (Input.GetKeyDown(KeyCode.E)) SetRotation(rotation - 90);
-                        } else {
-                            if (Input.GetKey(KeyCode.Q)) SetRotation(rotation + 5);
-                            if (Input.GetKey(KeyCode.E)) SetRotation(rotation - 5);
-                        }
+                    //typical rotation and mirroring things
+                    if (Input.GetKey(KeyCode.Q)) SetRotation(rotation + 175 * Time.deltaTime);
+                    if (Input.GetKey(KeyCode.E)) SetRotation(rotation - 175 * Time.deltaTime);
 
+                    if (movingEntityData.canAdvancedModify) {
                         if (Input.GetKeyDown(KeyCode.A)) ToggleEraser();
                     }
 
@@ -269,14 +264,19 @@ public class LevelEditorCursor : MonoBehaviour {
                     if (Input.GetKeyDown(KeyCode.A)) ToggleEraser();
 
                     //here we actually place the new tile
-                    if (Input.GetMouseButton(0) && placeTiles) {
+                    if ((Input.GetMouseButton(0) || Input.GetMouseButton(1)) && placeTiles) {
                         var inversePoint = transform.parent.InverseTransformPoint(mousePos);
                         var levelScreenPos = new Vector2(Mathf.InverseLerp(-18, 18, inversePoint.x), Mathf.InverseLerp(-18, 18, inversePoint.y)) * 150f;
 
-                        MarchingSquaresManager.AddValues(levelScreenPos, 8, -2.5f * Time.deltaTime);
+                        var offset = -3.25f * Time.deltaTime;
+                        if (Input.GetMouseButton(1)) offset *= -1f;
+
+                        MarchingSquaresManager.AddValues(levelScreenPos, 8, offset);
                         MarchingSquaresManager.GenerateMesh();
 
-                        //Debug.Log(levelScreenPos);
+                        LevelData data = LevelEditorManager.GetLevelData();
+
+                        data.levelMapValues = MarchingSquaresManager.GetValues();
 
                         /*
                         //here we check if we are placing upon a tile, if yes, delete it
@@ -342,7 +342,7 @@ public class LevelEditorCursor : MonoBehaviour {
             }
         }
 
-        if (Input.GetKeyUp(KeyCode.Mouse0) && prefab == null && CursorController.GetUser("EditorLinkLogicEntities") == null) {
+        if ((Input.GetKeyUp(KeyCode.Mouse0) || Input.GetKeyUp(KeyCode.Mouse1)) && prefab == null && CursorController.GetUser("EditorLinkLogicEntities") == null) {
             placeTiles = true;
         }
     }
