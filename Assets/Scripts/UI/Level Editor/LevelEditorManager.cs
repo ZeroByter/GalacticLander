@@ -61,6 +61,8 @@ public class LevelEditorManager : MonoBehaviour {
 
         mainCamera = Camera.main;
 
+        MarchingSquaresManager.CreateBlank(150, 150);
+
         //awake is called as soon as the level editor scene is loaded
         if (LevelLoader.PlayTestingLevel) { //so if a level is being playtested, we can check so here
             FileStream levelFile = File.Open(Application.persistentDataPath + "/Level Editor/tempLevel.level", FileMode.Open);

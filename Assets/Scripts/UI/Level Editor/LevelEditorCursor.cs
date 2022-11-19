@@ -270,7 +270,13 @@ public class LevelEditorCursor : MonoBehaviour {
 
                     //here we actually place the new tile
                     if (Input.GetMouseButton(0) && placeTiles) {
-                        Debug.Log("placing tiles...");
+                        var inversePoint = transform.parent.InverseTransformPoint(mousePos);
+                        var levelScreenPos = new Vector2(Mathf.InverseLerp(-18, 18, inversePoint.x), Mathf.InverseLerp(-18, 18, inversePoint.y)) * 150f;
+
+                        MarchingSquaresManager.AddValues(levelScreenPos, 8, -2.5f * Time.deltaTime);
+                        MarchingSquaresManager.GenerateMesh();
+
+                        //Debug.Log(levelScreenPos);
 
                         /*
                         //here we check if we are placing upon a tile, if yes, delete it

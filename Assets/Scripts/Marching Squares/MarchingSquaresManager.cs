@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,6 +7,15 @@ using UnityEngine;
 public class MarchingSquaresManager : MonoBehaviour
 {
     private static MarchingSquaresManager Singleton;
+
+    public static void CreateBlank(int width, int height)
+    {
+        if (Singleton == null) return;
+
+        Singleton.width = width;
+        Singleton.height = height;
+        Singleton.data = new float[width * height + width + 1];
+    }
 
     public static void SetData(int width, int height, float[] data)
     {
@@ -28,21 +38,21 @@ public class MarchingSquaresManager : MonoBehaviour
     }
 
     //Reverse offset to subtract instead of add
-    public static void AddValues(Vector2 center, float size, float offset = 0.6f)
+    public static void AddValues(Vector2 center, float size, float offset)
     {
         if (Singleton == null) return;
 
-        var min = new Vector2Int(Mathf.FloorToInt(center.x - size / 2 - Singleton.size * 2), Mathf.FloorToInt(center.y - size / 2 - Singleton.size * 2));
-        var max = new Vector2Int(Mathf.CeilToInt(center.x + size / 2 + Singleton.size * 2), Mathf.CeilToInt(center.y + size / 2 + Singleton.size * 2));
+        var min = new Vector2Int(Mathf.FloorToInt(center.x - size / 2), Mathf.FloorToInt(center.y - size / 2));
+        var max = new Vector2Int(Mathf.CeilToInt(center.x + size / 2), Mathf.CeilToInt(center.y + size / 2));
 
         for(int y = min.y; y < max.y; y++)
         {
             for(int x = min.x; x < max.x; x++)
             {
-                AddValue(x, y, Mathf.Clamp01(Vector2.Distance(new Vector2(x, y), center) / size * offset));
-                AddValue(x + 1, y, Mathf.Clamp01(Vector2.Distance(new Vector2(x + 1, y), center) / size * offset));
-                AddValue(x, y + 1, Mathf.Clamp01(Vector2.Distance(new Vector2(x, y + 1), center) / size * offset));
-                AddValue(x + 1, y + 1, Mathf.Clamp01(Vector2.Distance(new Vector2(x + 1, y + 1), center) / size * offset));
+                AddValue(x, y, (1 - Mathf.Clamp01(Vector2.Distance(new Vector2(x, y), center) / size * 2)) * offset);
+                AddValue(x + 1, y, (1 - Mathf.Clamp01(Vector2.Distance(new Vector2(x + 1, y), center) / size * 2)) * offset);
+                AddValue(x, y + 1, (1 - Mathf.Clamp01(Vector2.Distance(new Vector2(x, y + 1), center) / size * 2)) * offset);
+                AddValue(x + 1, y + 1, (1 - Mathf.Clamp01(Vector2.Distance(new Vector2(x + 1, y + 1), center) / size * 2)) * offset);
             }
         }
     }
@@ -59,7 +69,6 @@ public class MarchingSquaresManager : MonoBehaviour
     private Mesh mesh;
 
     private float isoLevel = 0.5f;
-    private float size = 0.1f;
 
     private int width;
     private int height;
@@ -68,14 +77,20 @@ public class MarchingSquaresManager : MonoBehaviour
 
     private void Awake()
     {
+        Singleton = this;
+
         meshFilter = GetComponent<MeshFilter>();
 
         mesh = new Mesh();
+        mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+
         meshFilter.sharedMesh = mesh;
     }
 
     private void _GenerateMesh()
     {
+        mesh.Clear();
+
         var vertices = new List<Vector3>();
         var triangles = new List<int>();
 
@@ -83,12 +98,12 @@ public class MarchingSquaresManager : MonoBehaviour
         {
             for (int x = 0; x < width; x++)
             {
-                var cornerLocations = new Vector3[]
+                var cornerLocations = new Vector3Int[]
                 {
-                    new Vector3(x * size, y * size, 0),
-                    new Vector3(x * size + size, y * size, 0),
-                    new Vector3(x * size, y * size + size, 0),
-                    new Vector3(x * size + size, y * size + size, 0)
+                    new Vector3Int(x, y, 0),
+                    new Vector3Int(x + 1, y, 0),
+                    new Vector3Int(x, y + 1, 0),
+                    new Vector3Int(x + 1, y + 1, 0)
                 };
 
                 var cornerValues = new float[]
@@ -413,6 +428,10 @@ public class MarchingSquaresManager : MonoBehaviour
             }
         }
 
+        mesh.Optimize();
+        mesh.RecalculateBounds();
+        mesh.RecalculateNormals();
+
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
     }
@@ -434,7 +453,7 @@ public class MarchingSquaresManager : MonoBehaviour
         return index;
     }
 
-    private Vector3 GetPointAlongEdge(Vector3[] p, float[] v, int i1, int i2)
+    private Vector3 GetPointAlongEdge(Vector3Int[] p, float[] v, int i1, int i2)
     {
         var p1 = p[i1];
         var p2 = p[i2];
