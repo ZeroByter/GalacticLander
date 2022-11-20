@@ -16,15 +16,19 @@ public class LevelEditorSaveMenu : MonoBehaviour {
     public CanvasBlurTransition transition;
     [Header("Level template")]
     public SavedLevelItemController template;
-    [Header("The save level panel")]
+    [Header("Save level panel")]
     public GameObject saveLevelPrompt;
     public TMP_InputField newSaveLevelNameInput;
+    [Header("Migrate old level panel")]
+    public GameObject migrateOldLevelPrompt;
+    public Button beginCurrentLevelMigrationButton;
     [Header("Other UI stuff")]
     public GameObject levelInfoPanel;
     public Image levelPreviewImage;
     public TMP_Text levelName;
     public TMP_InputField levelNameInput;
     public TMP_Text levelStats;
+    public Button loadCurrentLevelButton;
     [Header("Camera transition stuff")]
     public GameObject mainCamera;
     public GameObject screenshotCanvas;
@@ -58,6 +62,15 @@ public class LevelEditorSaveMenu : MonoBehaviour {
         Singletron = this;
 
         template.gameObject.SetActive(false);
+
+        loadCurrentLevelButton.onClick.AddListener(HandleLoadCurrentLevelButtonClick);
+        beginCurrentLevelMigrationButton.onClick.AddListener(HandleBeginCurrentLevelMigrationClick);
+    }
+
+    private void OnDestroy()
+    {
+        loadCurrentLevelButton.onClick.RemoveListener(HandleLoadCurrentLevelButtonClick);
+        beginCurrentLevelMigrationButton.onClick.RemoveListener(HandleBeginCurrentLevelMigrationClick);
     }
 
     /// <summary>
@@ -129,18 +142,31 @@ public class LevelEditorSaveMenu : MonoBehaviour {
         transition.OpenMenu();
 
         saveLevelPrompt.SetActive(false);
+        migrateOldLevelPrompt.SetActive(false);
 
         LoadLevelsList();
     }
 
-    public void ShowSaveLevel() {
+    public void ShowSaveLevel()
+    {
         transition.OpenMenu();
-        
+
+        migrateOldLevelPrompt.SetActive(false);
         saveLevelPrompt.SetActive(true);
         newSaveLevelNameInput.text = "";
         newSaveLevelNameInput.ActivateInputField();
 
         LoadLevelsList();
+
+        LevelEditorEscapeMenuController.Singletron.CheckIfShouldBeOpen();
+    }
+
+    public void ShowMigrateOldLevel()
+    {
+        transition.OpenMenu();
+
+        migrateOldLevelPrompt.SetActive(true);
+        saveLevelPrompt.SetActive(false);
 
         LevelEditorEscapeMenuController.Singletron.CheckIfShouldBeOpen();
     }
@@ -364,12 +390,18 @@ public class LevelEditorSaveMenu : MonoBehaviour {
         }
     }
 
-    public void LoadCurrentLevelToEditor(string levelFileName) {
+    public void LoadCurrentLevelToEditor(string levelFileName, bool skipShowMigratePrompt = false) {
         if(currentLevelData != null) {
             saveNewLevelName = selectedLevelName;
 
             if (!string.IsNullOrEmpty(levelFileName)) {
                 saveNewLevelName = levelFileName;
+            }
+
+            if(currentLevelData.levelMapValues == null && !skipShowMigratePrompt)
+            {
+                ShowMigrateOldLevel();
+                return;
             }
 
             transition.CloseMenu();
@@ -396,6 +428,16 @@ public class LevelEditorSaveMenu : MonoBehaviour {
                 LevelEditorEscapeMenuController.Singletron.SetTitleAndDescription("", "");
             }
         }
+    }
+
+    private void HandleLoadCurrentLevelButtonClick()
+    {
+        LoadCurrentLevelToEditor("", false);
+    }
+
+    private void HandleBeginCurrentLevelMigrationClick()
+    {
+        LoadCurrentLevelToEditor("", true);
     }
 
     private void SteamUGCQueryCompleted(SteamUGCQueryCompleted_t callback, bool error) {

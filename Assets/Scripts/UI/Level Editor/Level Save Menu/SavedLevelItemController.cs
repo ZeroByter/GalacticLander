@@ -59,7 +59,7 @@ public class SavedLevelItemController : MonoBehaviour, IPointerEnterHandler, IPo
     public void OnPointerClick(PointerEventData eventData) {
         if(Time.time - lastClicked < 0.2f) {
             if (levelData != null) {
-                saveMenu.LoadCurrentLevelToEditor(levelName.text);
+                saveMenu.LoadCurrentLevelToEditor(levelName.text, false);
             }
         } else {
             if (levelData != null) {

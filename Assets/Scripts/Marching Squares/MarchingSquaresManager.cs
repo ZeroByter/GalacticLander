@@ -6,26 +6,25 @@ using UnityEngine;
 [RequireComponent(typeof(MeshRenderer))]
 public class MarchingSquaresManager : MonoBehaviour
 {
+    private static int DataWidth = 150;
+    private static int DataHeight = 150;
+    private static float IsoLevel = 0.5f;
+
     private static MarchingSquaresManager Singleton;
 
     public static void CreateBlank()
     {
         if (Singleton == null) return;
 
-        var width = 150;
-        var height = 150;
-
-        Singleton.width = width;
-        Singleton.height = height;
-        Singleton.data = new float[width * height + width + 1];
-        for(int i = 0; i < Singleton.data.Length; i++)
+        Singleton.data = new float[DataWidth * DataHeight + DataWidth + 1];
+        for (int i = 0; i < Singleton.data.Length; i++)
         {
             Singleton.data[i] = 1f;
         }
 
         var holeWidth = 40;
         var holeHeight = 15;
-        var center = new Vector2(width / 2 + 9, height / 2 + holeHeight / 2);
+        var center = new Vector2(DataWidth / 2 + 9, DataHeight / 2 + holeHeight / 2);
 
         var min = new Vector2Int(Mathf.FloorToInt(center.x - holeWidth / 2), Mathf.FloorToInt(center.y - holeHeight / 2));
         var max = new Vector2Int(Mathf.CeilToInt(center.x + holeWidth / 2), Mathf.CeilToInt(center.y + holeHeight / 2));
@@ -43,9 +42,36 @@ public class MarchingSquaresManager : MonoBehaviour
     {
         if (Singleton == null) return;
 
-        Singleton.width = 150;
-        Singleton.height = 150;
         Singleton.data = data;
+    }
+
+    private static Vector2 ConvertPositionFromOldToNew(Vector2 position)
+    {
+        return new Vector2(position.x / 36f * 150f, position.y / 36f * 150f);
+    }
+
+    public static void SetDataFromOldLevel(LevelData oldLevelData)
+    {
+        var bounds = oldLevelData.GetBounds();
+
+        Singleton.data = new float[DataWidth * DataHeight + DataWidth + 1];
+        for (int i = 0; i < Singleton.data.Length; i++)
+        {
+            Singleton.data[i] = 1f;
+        }
+
+        for (int y = Mathf.FloorToInt(bounds.min.y); y < Mathf.FloorToInt(bounds.max.y); y++)
+        {
+            for (int x = Mathf.FloorToInt(bounds.min.x); x < Mathf.FloorToInt(bounds.max.x); x++)
+            {
+                if (oldLevelData.IsPointInLevel(new Vector2(x, y)))
+                {
+                    var newPosition = ConvertPositionFromOldToNew(new Vector2(x, y));
+
+                    AddValuesSquare(new Vector2(DataWidth / 2 + Mathf.RoundToInt(newPosition.x), DataHeight / 2 + Mathf.RoundToInt(newPosition.y)), 6, 6, -1f);
+                }
+            }
+        }
     }
 
     public static void AddValue(int x, int y, float value)
@@ -55,7 +81,7 @@ public class MarchingSquaresManager : MonoBehaviour
         if (x < 3 || x > 150 - 3) return;
         if (y < 3 || y > 150 - 3) return;
 
-        var index = x + y * Singleton.width;
+        var index = x + y * DataWidth;
 
         if (index < 0 || index > Singleton.data.Length) return;
 
@@ -82,6 +108,22 @@ public class MarchingSquaresManager : MonoBehaviour
         }
     }
 
+    private static void AddValuesSquare(Vector2 center, int width, int height, float value)
+    {
+        if (Singleton == null) return;
+
+        var min = new Vector2Int(Mathf.FloorToInt(center.x - width / 2), Mathf.FloorToInt(center.y - height / 2));
+        var max = new Vector2Int(Mathf.CeilToInt(center.x + width / 2), Mathf.CeilToInt(center.y + height / 2));
+
+        for (int y = min.y; y < max.y; y++)
+        {
+            for (int x = min.x; x < max.x; x++)
+            {
+                AddValue(x, y, value);
+            }
+        }
+    }
+
     public static float[] GetValues()
     {
         if (Singleton == null) return new float[0];
@@ -99,11 +141,6 @@ public class MarchingSquaresManager : MonoBehaviour
     private MeshFilter meshFilter;
 
     private Mesh mesh;
-
-    private float isoLevel = 0.5f;
-
-    private int width;
-    private int height;
 
     private float[] data;
 
@@ -126,9 +163,9 @@ public class MarchingSquaresManager : MonoBehaviour
         var vertices = new List<Vector3>();
         var triangles = new List<int>();
 
-        for (int y = 0; y < height; y++)
+        for (int y = 0; y < DataHeight; y++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < DataWidth; x++)
             {
                 var cornerLocations = new Vector3Int[]
                 {
@@ -140,10 +177,10 @@ public class MarchingSquaresManager : MonoBehaviour
 
                 var cornerValues = new float[]
                 {
-                    data[GetCornerIndex(x, y, width)],
-                    data[GetCornerIndex(x + 1, y, width)],
-                    data[GetCornerIndex(x, y + 1, width)],
-                    data[GetCornerIndex(x + 1, y + 1, width)]
+                    data[GetCornerIndex(x, y)],
+                    data[GetCornerIndex(x + 1, y)],
+                    data[GetCornerIndex(x, y + 1)],
+                    data[GetCornerIndex(x + 1, y + 1)]
                 };
 
                 var cubeIndex = GetSquareIndex(cornerValues[0], cornerValues[1], cornerValues[2], cornerValues[3]);
@@ -468,19 +505,19 @@ public class MarchingSquaresManager : MonoBehaviour
         mesh.triangles = triangles.ToArray();
     }
 
-    private int GetCornerIndex(int x, int y, int width)
+    private int GetCornerIndex(int x, int y)
     {
-        return x + y * width;
+        return x + y * DataWidth;
     }
 
     private int GetSquareIndex(float corner0, float corner1, float corner2, float corner3)
     {
         var index = 0;
 
-        if (corner0 >= isoLevel) index |= 1;
-        if (corner1 >= isoLevel) index |= 2;
-        if (corner2 >= isoLevel) index |= 4;
-        if (corner3 >= isoLevel) index |= 8;
+        if (corner0 >= IsoLevel) index |= 1;
+        if (corner1 >= IsoLevel) index |= 2;
+        if (corner2 >= IsoLevel) index |= 4;
+        if (corner3 >= IsoLevel) index |= 8;
 
         return index;
     }
@@ -492,7 +529,7 @@ public class MarchingSquaresManager : MonoBehaviour
         var v1 = v[i1];
         var v2 = v[i2];
 
-        var mul = (isoLevel - v1) / (v2 - v1);
+        var mul = (IsoLevel - v1) / (v2 - v1);
 
         return Vector3.Lerp(p1, p2, mul);
     }

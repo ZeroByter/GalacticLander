@@ -205,10 +205,15 @@ public class LevelEditorManager : MonoBehaviour {
             MarchingSquaresManager.SetData(newData.levelMapValues);
             MarchingSquaresManager.GenerateMesh();
         }
+        else
+        {
+            MarchingSquaresManager.SetDataFromOldLevel(newData);
+            MarchingSquaresManager.GenerateMesh();
+        }
 
         //Go through all entities and tiles in new loaded `LevelData` and instantiate them inside the level editor
         foreach (LevelObject obj in newData.levelData) {
-            if(obj.GetType() == typeof(LevelTile)) {
+            /*if(obj.GetType() == typeof(LevelTile)) {
                 LevelTile tile = (LevelTile)obj;
 
                 SpriteRenderer newSprite = Instantiate(Singletron.template, Singletron.template.transform.parent);
@@ -224,7 +229,7 @@ public class LevelEditorManager : MonoBehaviour {
 
                 LevelObjectHolder objectHolder = newSprite.gameObject.AddComponent<LevelObjectHolder>();
                 objectHolder.levelTile = tile;
-            }
+            }*/
 
             if(obj.GetType() == typeof(LevelEntity) || obj.isEntity) {
                 LevelEntity entity = (LevelEntity)obj;

@@ -20,6 +20,34 @@ public class LevelEditorCursor : MonoBehaviour {
 
     public static LevelEditorCursor Singletron;
 
+    public static bool IsEraserSelected()
+    {
+        if (Singletron == null) return false;
+
+        return Singletron.eraser;
+    }
+
+    public static void SetEraserSelected(bool selected)
+    {
+        if (Singletron == null) return;
+
+        Singletron.SetEraser(selected);
+    }
+
+    public static void SetBrushHardness(float newValue, float minValue, float maxValue)
+    {
+        if (Singletron == null) return;
+
+        Singletron._SetBrushHardness(newValue, minValue, maxValue);
+    }
+
+    public static void SetBrushSize(float newSize)
+    {
+        if (Singletron == null) return;
+
+        Singletron._SetBrushSize(newSize);
+    }
+
     public SpriteRenderer template;
     public ButtonToggle eraserButtonToggle;
     public ButtonToggle tileRandomizerToggle;
@@ -39,6 +67,9 @@ public class LevelEditorCursor : MonoBehaviour {
 
     private Sprite[] sprites;
     private List<TileFamily> tileFamilies = new List<TileFamily>();
+
+    private float brushHardness = 10f;
+    private float brushSize = 10f;
 
     public static bool IsCurrentlyMovingObject()
     {
@@ -105,6 +136,8 @@ public class LevelEditorCursor : MonoBehaviour {
         if (!EventSystem.current.IsPointerOverGameObject()) {
             Vector2 mousePos = MainCameraController.Singletron.selfCamera.ScreenToWorldPoint(Input.mousePosition);
             Vector2 screenPos;
+
+            LevelEditorBrushPreviewController.SetPosition(mousePos);
 
             //cancel editing level when pressing escape
             if ((prefab != null || eraser) && Input.GetKeyDown(KeyCode.Escape) && LastPressedEscape.LastPressedEscapeCooldownOver(0.1f)) {
@@ -268,10 +301,10 @@ public class LevelEditorCursor : MonoBehaviour {
                         var inversePoint = transform.parent.InverseTransformPoint(mousePos);
                         var levelScreenPos = new Vector2(Mathf.InverseLerp(-18, 18, inversePoint.x), Mathf.InverseLerp(-18, 18, inversePoint.y)) * 150f;
 
-                        var offset = -3.25f * Time.deltaTime;
-                        if (Input.GetMouseButton(1)) offset *= -1f;
+                        var offset = brushHardness * Time.deltaTime;
+                        if (!Input.GetMouseButton(1)) offset *= -1f;
 
-                        MarchingSquaresManager.AddValues(levelScreenPos, 8, offset);
+                        MarchingSquaresManager.AddValues(levelScreenPos, brushSize, offset);
                         MarchingSquaresManager.GenerateMesh();
 
                         LevelData data = LevelEditorManager.GetLevelData();
@@ -735,9 +768,25 @@ public class LevelEditorCursor : MonoBehaviour {
         } else {
             CursorController.RemoveUser("editorEraser");
         }
+
+        LevelEditorControlsManager.UpdateUI();
     }
 
     public void ToggleEraser() {
         SetEraser(!eraser);
+    }
+
+    private void _SetBrushSize(float newSize)
+    {
+        brushSize = newSize;
+
+        LevelEditorBrushPreviewController.SetSize(newSize * 0.18f + 0.5f);
+    }
+
+    private void _SetBrushHardness(float newValue, float minValue, float maxValue)
+    {
+        brushHardness = newValue;
+
+        LevelEditorBrushPreviewController.SetStrength(Mathf.Lerp(0.3f, 1f, Mathf.InverseLerp(minValue, maxValue, newValue)));
     }
 }
