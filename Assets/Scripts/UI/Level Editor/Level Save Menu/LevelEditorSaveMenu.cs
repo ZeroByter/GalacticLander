@@ -246,7 +246,7 @@ public class LevelEditorSaveMenu : MonoBehaviour {
         return new Vector3(x / screenshotCameraPositions.Count, y / screenshotCameraPositions.Count, -50);
     }
 
-    private float GetRequiredSize() {
+    private float GetRequiredSize(int offset = 5) {
         Vector3 desiredLocalPos = transform.InverseTransformPoint(GetAveragePosition());
 
         float size = 0;
@@ -258,24 +258,25 @@ public class LevelEditorSaveMenu : MonoBehaviour {
             size = Mathf.Max(size, Mathf.Abs(desiredPosToTarget.x) / screenshotCamera.aspect);
         }
 
-        size += 5;
+        size += offset;
         //size = Mathf.Max(size, 5);
 
         return size;
     }
 
     private void PositionScreenshotCamera() {
-        if (LevelEditorManager.GetLevelData().levelData.Count <= 2) return;
+        var levelData = LevelEditorManager.GetLevelData();
+
+        if (levelData.levelMapValues == null && levelData.levelData.Count <= 2) return;
 
         screenshotCameraPositions = new List<Vector3>();
-        screenshotCameraPositions.Add(LevelEditorManager.GetLevelData().GetBounds().min);
-        screenshotCameraPositions.Add(LevelEditorManager.GetLevelData().GetBounds().max);
-        /*foreach(LevelObject obj in LevelEditorManager.GetLevelData().levelData) {
-            screenshotCameraPositions.Add(obj.GetPosition());
-        }*/
+        screenshotCameraPositions.Add(levelData.GetBounds().min);
+        screenshotCameraPositions.Add(levelData.GetBounds().max);
+
+        Debug.DrawLine(levelData.GetBounds().min, levelData.GetBounds().max, Color.red, 60);
 
         screenshotCamera.transform.position = GetAveragePosition();
-        screenshotCamera.orthographicSize = GetRequiredSize();
+        screenshotCamera.orthographicSize = GetRequiredSize(levelData.levelMapValues == null ? 5 : -5);
     }
     #endregion
 

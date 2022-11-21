@@ -33,7 +33,7 @@ public class SpriteRedFlasher : MonoBehaviour {
             return;
         }
 
-        i += flashSpeed;
+        i += flashSpeed * Time.deltaTime;
 
         float c = (Mathf.Sin(i) + 1) / 2;
         sprite.color = new Color(Mathf.Lerp(1, c, c), 1 - c, 1 - c, 1);

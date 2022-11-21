@@ -263,6 +263,13 @@ public class LevelLoader : MonoBehaviour {
             //adjusting background tiles color
             Shader.SetGlobalColor("_ReplaceColor", new Color(DarkerTileColor(tilesColor.r), DarkerTileColor(tilesColor.g), DarkerTileColor(tilesColor.b), 1));
 
+            if(levelData.levelMapValues != null)
+            {
+                MarchingSquaresManager.SetData(levelData.levelMapValues);
+                MarchingSquaresManager.GenerateMesh(true);
+                MarchingSquaresManager.GenerateCollisions();
+            }
+
             //creating tiles
             foreach (LevelObject obj in levelData.levelData) {
                 if(obj.GetType() == typeof(LevelTile)) {

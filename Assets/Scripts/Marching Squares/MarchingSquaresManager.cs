@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
 public class MarchingSquaresManager : MonoBehaviour
 {
-    private static int DataWidth = 150;
-    private static int DataHeight = 150;
-    private static float IsoLevel = 0.5f;
+    public static int DataWidth = 150;
+    public static int DataHeight = 150;
+    public static float IsoLevel = 0.5f;
 
     private static MarchingSquaresManager Singleton;
 
@@ -108,6 +109,28 @@ public class MarchingSquaresManager : MonoBehaviour
         }
     }
 
+    public static void GenerateCollisions()
+    {
+        if (Singleton == null) return;
+
+        foreach(Transform child in Singleton.transform)
+        {
+            Destroy(child.gameObject);
+        }
+
+        var collisionsObject = new GameObject();
+
+        foreach(var linkedEdges in Singleton.linkedEdgesList)
+        {
+            var collider = collisionsObject.AddComponent<EdgeCollider2D>();
+            collider.points = linkedEdges.ToArray();
+        }
+
+        collisionsObject.transform.parent = Singleton.transform;
+        collisionsObject.transform.localPosition = Vector3.zero;
+        collisionsObject.transform.localScale = Vector3.one;
+    }
+
     private static void AddValuesSquare(Vector2 center, int width, int height, float value)
     {
         if (Singleton == null) return;
@@ -131,11 +154,11 @@ public class MarchingSquaresManager : MonoBehaviour
         return Singleton.data;
     }
 
-    public static void GenerateMesh()
+    public static void GenerateMesh(bool markEdges = false)
     {
         if (Singleton == null) return;
 
-        Singleton._GenerateMesh();
+        Singleton._GenerateMesh(markEdges);
     }
 
     private MeshFilter meshFilter;
@@ -143,6 +166,8 @@ public class MarchingSquaresManager : MonoBehaviour
     private Mesh mesh;
 
     private float[] data;
+
+    private List<LinkedList<Vector2>> linkedEdgesList = new List<LinkedList<Vector2>>();
 
     private void Awake()
     {
@@ -156,7 +181,50 @@ public class MarchingSquaresManager : MonoBehaviour
         meshFilter.sharedMesh = mesh;
     }
 
-    private void _GenerateMesh()
+    private void AddEdgeToEdges(bool markEdges, params Vector2[] edges)
+    {
+        if (!markEdges) return;
+
+        var foundLinked = false;
+
+        foreach (var linkedEdges in linkedEdgesList)
+        {
+            for (int i = 0; i < edges.Length; i++)
+            {
+                Vector2 edge = edges[i];
+
+                var foundEdge = linkedEdges.Find(edge);
+
+                if (foundEdge != null)
+                {
+                    if(i == 0)
+                    {
+                        linkedEdges.AddAfter(foundEdge, edges[1]);
+                    }
+                    else
+                    {
+                        linkedEdges.AddAfter(foundEdge, edges[0]);
+                    }
+
+                    foundLinked = true;
+                }
+            }
+        }
+
+        if (!foundLinked)
+        {
+            var newLinkedList = new LinkedList<Vector2>();
+
+            foreach (var edge in edges)
+            {
+                newLinkedList.AddLast(edge);
+            }
+
+            linkedEdgesList.Add(newLinkedList);
+        }
+    }
+
+    private void _GenerateMesh(bool markEdges)
     {
         mesh.Clear();
 
@@ -209,6 +277,8 @@ public class MarchingSquaresManager : MonoBehaviour
                     var p1 = GetPointAlongEdge(cornerLocations, cornerValues, 0, 1);
                     var p2 = GetPointAlongEdge(cornerLocations, cornerValues, 0, 2);
 
+                    AddEdgeToEdges(markEdges, p1, p2);
+
                     vertices.Add(c1);
                     vertices.Add(p1);
                     vertices.Add(p2);
@@ -222,6 +292,8 @@ public class MarchingSquaresManager : MonoBehaviour
                     var c1 = cornerLocations[1];
                     var p1 = GetPointAlongEdge(cornerLocations, cornerValues, 0, 1);
                     var p2 = GetPointAlongEdge(cornerLocations, cornerValues, 1, 3);
+
+                    AddEdgeToEdges(markEdges, p1, p2);
 
                     vertices.Add(c1);
                     vertices.Add(p1);
@@ -237,6 +309,8 @@ public class MarchingSquaresManager : MonoBehaviour
                     var c2 = cornerLocations[1];
                     var p1 = GetPointAlongEdge(cornerLocations, cornerValues, 0, 2);
                     var p2 = GetPointAlongEdge(cornerLocations, cornerValues, 1, 3);
+
+                    AddEdgeToEdges(markEdges, p1, p2);
 
                     vertices.Add(c1);
                     vertices.Add(p1);
@@ -257,6 +331,8 @@ public class MarchingSquaresManager : MonoBehaviour
                     var p1 = GetPointAlongEdge(cornerLocations, cornerValues, 0, 2);
                     var p2 = GetPointAlongEdge(cornerLocations, cornerValues, 2, 3);
 
+                    AddEdgeToEdges(markEdges, p1, p2);
+
                     vertices.Add(c1);
                     vertices.Add(p1);
                     vertices.Add(p2);
@@ -271,6 +347,8 @@ public class MarchingSquaresManager : MonoBehaviour
                     var c2 = cornerLocations[2];
                     var p1 = GetPointAlongEdge(cornerLocations, cornerValues, 0, 1);
                     var p2 = GetPointAlongEdge(cornerLocations, cornerValues, 2, 3);
+
+                    AddEdgeToEdges(markEdges, p1, p2);
 
                     vertices.Add(c1);
                     vertices.Add(p1);
@@ -293,6 +371,9 @@ public class MarchingSquaresManager : MonoBehaviour
                     var p2 = GetPointAlongEdge(cornerLocations, cornerValues, 1, 3);
                     var p3 = GetPointAlongEdge(cornerLocations, cornerValues, 0, 2);
                     var p4 = GetPointAlongEdge(cornerLocations, cornerValues, 2, 3);
+
+                    AddEdgeToEdges(markEdges, p1, p2);
+                    AddEdgeToEdges(markEdges, p3, p4);
 
                     vertices.Add(c1);
                     vertices.Add(p1);
@@ -318,6 +399,8 @@ public class MarchingSquaresManager : MonoBehaviour
                     var p1 = GetPointAlongEdge(cornerLocations, cornerValues, 2, 3);
                     var p2 = GetPointAlongEdge(cornerLocations, cornerValues, 1, 3);
 
+                    AddEdgeToEdges(markEdges, p1, p2);
+
                     vertices.Add(c1);
                     vertices.Add(c2);
                     vertices.Add(c3);
@@ -342,6 +425,8 @@ public class MarchingSquaresManager : MonoBehaviour
                     var p1 = GetPointAlongEdge(cornerLocations, cornerValues, 1, 3);
                     var p2 = GetPointAlongEdge(cornerLocations, cornerValues, 2, 3);
 
+                    AddEdgeToEdges(markEdges, p1, p2);
+
                     vertices.Add(c1);
                     vertices.Add(p1);
                     vertices.Add(p2);
@@ -358,6 +443,9 @@ public class MarchingSquaresManager : MonoBehaviour
                     var p2 = GetPointAlongEdge(cornerLocations, cornerValues, 0, 2);
                     var p3 = GetPointAlongEdge(cornerLocations, cornerValues, 1, 3);
                     var p4 = GetPointAlongEdge(cornerLocations, cornerValues, 2, 3);
+
+                    AddEdgeToEdges(markEdges, p1, p2);
+                    AddEdgeToEdges(markEdges, p3, p4);
 
                     vertices.Add(c1);
                     vertices.Add(p1);
@@ -382,6 +470,8 @@ public class MarchingSquaresManager : MonoBehaviour
                     var p1 = GetPointAlongEdge(cornerLocations, cornerValues, 0, 1);
                     var p2 = GetPointAlongEdge(cornerLocations, cornerValues, 2, 3);
 
+                    AddEdgeToEdges(markEdges, p1, p2);
+
                     vertices.Add(c1);
                     vertices.Add(p1);
                     vertices.Add(p2);
@@ -402,6 +492,8 @@ public class MarchingSquaresManager : MonoBehaviour
                     var c3 = cornerLocations[3];
                     var p1 = GetPointAlongEdge(cornerLocations, cornerValues, 0, 2);
                     var p2 = GetPointAlongEdge(cornerLocations, cornerValues, 2, 3);
+
+                    AddEdgeToEdges(markEdges, p1, p2);
 
                     vertices.Add(c1);
                     vertices.Add(c2);
@@ -428,6 +520,8 @@ public class MarchingSquaresManager : MonoBehaviour
                     var p1 = GetPointAlongEdge(cornerLocations, cornerValues, 0, 2);
                     var p2 = GetPointAlongEdge(cornerLocations, cornerValues, 1, 3);
 
+                    AddEdgeToEdges(markEdges, p1, p2);
+
                     vertices.Add(c1);
                     vertices.Add(p1);
                     vertices.Add(p2);
@@ -448,6 +542,8 @@ public class MarchingSquaresManager : MonoBehaviour
                     var c3 = cornerLocations[3];
                     var p1 = GetPointAlongEdge(cornerLocations, cornerValues, 0, 1);
                     var p2 = GetPointAlongEdge(cornerLocations, cornerValues, 1, 3);
+
+                    AddEdgeToEdges(markEdges, p1, p2);
 
                     vertices.Add(c2);
                     vertices.Add(c1);
@@ -474,6 +570,8 @@ public class MarchingSquaresManager : MonoBehaviour
                     var c3 = cornerLocations[3];
                     var p1 = GetPointAlongEdge(cornerLocations, cornerValues, 0, 1);
                     var p2 = GetPointAlongEdge(cornerLocations, cornerValues, 0, 2);
+
+                    AddEdgeToEdges(markEdges, p1, p2);
 
                     vertices.Add(c3);
                     vertices.Add(c1);

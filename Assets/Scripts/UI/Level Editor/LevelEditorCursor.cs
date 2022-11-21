@@ -261,6 +261,11 @@ public class LevelEditorCursor : MonoBehaviour {
                     if (Input.GetKey(KeyCode.Q)) SetRotation(rotation + 175 * Time.deltaTime);
                     if (Input.GetKey(KeyCode.E)) SetRotation(rotation - 175 * Time.deltaTime);
 
+                    if (!movingEntityData.canAdvancedModify)
+                    {
+                        SetRotation(Mathf.Clamp(rotation, -45, 45));
+                    }
+
                     if (movingEntityData.canAdvancedModify) {
                         if (Input.GetKeyDown(KeyCode.A)) ToggleEraser();
                     }

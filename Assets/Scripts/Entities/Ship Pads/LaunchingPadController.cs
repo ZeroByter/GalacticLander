@@ -20,6 +20,8 @@ public class LaunchingPadController : MonoBehaviour
     {
         bool isInLobby = SteamManager.Initialized && NetworkingManager.CurrentLobbyValid;
 
+        var shipPosition = new Vector3(transform.position.x, transform.position.y) + transform.up * 0.56f;
+
         if (isInLobby)
         {
             bool areWeOwner = SteamMatchmaking.GetLobbyOwner((CSteamID)NetworkingManager.CurrentLobby) == SteamUser.GetSteamID();
@@ -28,17 +30,17 @@ public class LaunchingPadController : MonoBehaviour
             {
                 if (LaunchPads[OwnerLaunchPadIndex] == this)
                 {
-                    NetworkingManager.InstantiateObject("Player Ships/Player Ship", new Vector2(transform.position.x, transform.position.y + 0.56f));
+                    NetworkingManager.InstantiateObject("Player Ships/Player Ship", shipPosition, transform.eulerAngles.z);
                 }
                 else
                 {
-                    NetworkingManager.SendPacketOtherOnly(new object[] { 12, transform.position.x, transform.position.y + 0.56f }, 1);
+                    NetworkingManager.SendPacketOtherOnly(new object[] { 12, shipPosition.x, shipPosition.y, transform.eulerAngles.z }, 1);
                 }
             }
         }
         else
         {
-            Instantiate(playerShip, new Vector2(transform.position.x, transform.position.y + 0.56f), Quaternion.identity);
+            Instantiate(playerShip, shipPosition, transform.rotation);
         }
     }
 }

@@ -198,9 +198,28 @@ public class LevelData {
 
     public Bounds GetBounds() {
         if (levelBounds.size == Vector3.zero || !boundsValid) {
-            levelBounds = new Bounds(GetTiles()[0], Vector2.one * 2);
-            foreach (Vector2 tile in GetTiles()) {
-                levelBounds.Encapsulate(tile);
+            if(levelMapValues != null)
+            {
+                levelBounds = new Bounds(Vector3.zero, Vector3.one);
+                for(float y = 0; y < 36; y += 0.5f)
+                {
+                    for(float x = 0; x < 36; x += 0.5f)
+                    {
+                        var point = new Vector3(x, y);
+                        if(!IsPointInLevelNew(new Vector2(x, y)))
+                        {
+                            levelBounds.Encapsulate(point - new Vector3(18, 18));
+                        }
+                    }
+                }
+            }
+            else
+            {
+                levelBounds = new Bounds(GetTiles()[0], Vector2.one * 2);
+                foreach (Vector2 tile in GetTiles())
+                {
+                    levelBounds.Encapsulate(tile);
+                }
             }
             boundsValid = true;
         }
@@ -560,5 +579,16 @@ public class LevelData {
         }
 
         return lineHits % 2 != 0;
+    }
+
+    public bool IsPointInLevelNew(Vector2 point)
+    {
+        var newX = Mathf.RoundToInt(point.x / 36f * 150f);
+        var newY = Mathf.RoundToInt(point.y / 36f * 150f);
+        var index = newX + newY * MarchingSquaresManager.DataWidth;
+
+        if (index < 0 || index > levelMapValues.Length) return false;
+
+        return levelMapValues[index] >= MarchingSquaresManager.IsoLevel;
     }
 }
