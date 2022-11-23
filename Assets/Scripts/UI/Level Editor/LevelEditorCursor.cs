@@ -58,6 +58,7 @@ public class LevelEditorCursor : MonoBehaviour {
     private LayerMask entityLayer;
 
     private LevelEntity firstEntityLogicLinking;
+    private bool holdingDownAlt = false;
 
     private float rotation;
     private bool eraser;
@@ -147,6 +148,8 @@ public class LevelEditorCursor : MonoBehaviour {
                 SetPrefab(null, null);
                 SetEraser(false);
                 LastPressedEscape.SetPressedEscape();
+
+                UpdateBrushPreviewVisible();
             }
 
             //eraser code
@@ -228,10 +231,14 @@ public class LevelEditorCursor : MonoBehaviour {
                             }
                         }
                     }
+
+                    UpdateBrushPreviewVisible();
                 }
 
                 //if we pressed the left alt key
                 if (Input.GetKeyDown(KeyCode.LeftAlt)) {
+                    holdingDownAlt = true;
+
                     if (prefab != null && movingEntityData != null) {
                         prefab.transform.position = movingEntityData.GetPosition();
                     }
@@ -240,17 +247,25 @@ public class LevelEditorCursor : MonoBehaviour {
                     SetPrefab(null, null);
                     CursorController.AddUser("EditorLinkLogicEntities", CursorUser.Type.EditorLinkLogicEntities);
                     LevelEditorLinesController.DestroyAllLinesWithTarget(transform);
+
+                    UpdateBrushPreviewVisible();
                 }
 
                 //when we let go of the left alt key
                 if (Input.GetKeyUp(KeyCode.LeftAlt)) {
+                    holdingDownAlt = false;
+
                     firstEntityLogicLinking = null;
                     CursorController.RemoveUser("EditorLinkLogicEntities");
                     LevelEditorLinesController.DestroyAllLinesWithTarget(transform);
+
+                    UpdateBrushPreviewVisible();
                 }
 
                 //if we have a prefab currently selected
                 if (prefab != null && movingEntityData != null) {
+                    UpdateBrushPreviewVisible();
+
                     if (movingEntityData.lockedToGrid) {
                         screenPos = new Vector2(Mathf.Round(transform.parent.InverseTransformPoint(mousePos).x + 0.5f) - 0.5f, Mathf.Round(transform.parent.InverseTransformPoint(mousePos).y + 0.5f) - 0.5f);
                     } else {
@@ -310,7 +325,7 @@ public class LevelEditorCursor : MonoBehaviour {
                         if (!Input.GetMouseButton(1)) offset *= -1f;
 
                         MarchingSquaresManager.AddValues(levelScreenPos, brushSize, offset);
-                        MarchingSquaresManager.GenerateMesh();
+                        MarchingSquaresManager.GenerateMeshAndCollisions();
 
                         LevelData data = LevelEditorManager.GetLevelData();
 
@@ -369,6 +384,8 @@ public class LevelEditorCursor : MonoBehaviour {
                         }
                         */
                     }
+
+                    UpdateBrushPreviewVisible();
                 }
 
                 if (Input.GetKey(KeyCode.LeftAlt)) {
@@ -383,6 +400,11 @@ public class LevelEditorCursor : MonoBehaviour {
         if ((Input.GetKeyUp(KeyCode.Mouse0) || Input.GetKeyUp(KeyCode.Mouse1)) && prefab == null && CursorController.GetUser("EditorLinkLogicEntities") == null) {
             placeTiles = true;
         }
+    }
+
+    private void UpdateBrushPreviewVisible()
+    {
+        LevelEditorBrushPreviewController.SetVisible(!holdingDownAlt && !eraser && movingEntityData == null && prefab == null);
     }
 
     /// <summary>
@@ -774,6 +796,7 @@ public class LevelEditorCursor : MonoBehaviour {
             CursorController.RemoveUser("editorEraser");
         }
 
+        UpdateBrushPreviewVisible();
         LevelEditorControlsManager.UpdateUI();
     }
 

@@ -273,10 +273,8 @@ public class LevelEditorSaveMenu : MonoBehaviour {
         screenshotCameraPositions.Add(levelData.GetBounds().min);
         screenshotCameraPositions.Add(levelData.GetBounds().max);
 
-        Debug.DrawLine(levelData.GetBounds().min, levelData.GetBounds().max, Color.red, 60);
-
         screenshotCamera.transform.position = GetAveragePosition();
-        screenshotCamera.orthographicSize = GetRequiredSize(levelData.levelMapValues == null ? 5 : -5);
+        screenshotCamera.orthographicSize = GetRequiredSize(levelData.levelMapValues == null ? 5 : 0);
     }
     #endregion
 
@@ -294,7 +292,9 @@ public class LevelEditorSaveMenu : MonoBehaviour {
 
         int width = Screen.width;
         int height = Screen.height;
-        
+
+        LevelEditorBrushPreviewController.SetVisible(false);
+
         RenderTexture rt = new RenderTexture(width, height, 24);
         screenshotCamera.targetTexture = rt;
         Texture2D screenShot = new Texture2D(width, height, TextureFormat.RGB24, false);
@@ -304,6 +304,8 @@ public class LevelEditorSaveMenu : MonoBehaviour {
         screenshotCamera.targetTexture = null;
         RenderTexture.active = null;
         Destroy(rt);
+
+        LevelEditorBrushPreviewController.SetVisible(true);
 
         byte[] bytes = screenShot.EncodeToPNG();
 

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class SpriteRedFlasher : MonoBehaviour {
-    public float flashSpeed = 0.25f;
+    public float flashSpeed = 1f;
     public float flashTime = 1f;
 
     private SpriteRenderer sprite;

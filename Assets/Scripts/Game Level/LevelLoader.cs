@@ -266,13 +266,21 @@ public class LevelLoader : MonoBehaviour {
             if(levelData.levelMapValues != null)
             {
                 MarchingSquaresManager.SetData(levelData.levelMapValues);
-                MarchingSquaresManager.GenerateMesh(true);
-                MarchingSquaresManager.GenerateCollisions();
+                MarchingSquaresManager.GenerateMeshAndCollisions();
+
+                if (currentEvent == null)
+                {
+                    MarchingSquaresManager.SetColor(tilesColor);
+                }
+                else
+                {
+                    MarchingSquaresManager.SetColor(currentEvent.GetTileColor(0, 0));
+                }
             }
 
             //creating tiles
             foreach (LevelObject obj in levelData.levelData) {
-                if(obj.GetType() == typeof(LevelTile)) {
+                if(obj.GetType() == typeof(LevelTile) && levelData.levelMapValues == null) {
                     LevelTile tile = (LevelTile)obj;
                     GameObject collisionPrefab = (GameObject) Resources.Load("Collision Data/" + tile.spriteName, typeof(GameObject));
                     GameObject newTile = Instantiate(collisionPrefab, new Vector2(tile.x, tile.y), Quaternion.Euler(0,0,tile.rotation));
@@ -334,7 +342,7 @@ public class LevelLoader : MonoBehaviour {
                 }
             }
 
-            FillOutsideVoid(levelData, tilesColor, currentEvent);
+            if(levelData.levelMapValues == null) FillOutsideVoid(levelData, tilesColor, currentEvent);
 
             if(levelData.workshopId != 0) { //if this is a workshop level
                 SteamUGC.StartPlaytimeTracking(new PublishedFileId_t[] { new PublishedFileId_t(levelData.workshopId) }, 1);
@@ -360,6 +368,11 @@ public class LevelLoader : MonoBehaviour {
         foreach(LandingPadController landingPad in LandingPadController.AllPads) {
             landingPad.isCapturing = false;
         }
+    }
+
+    private void OnDestroy()
+    {
+        MarchingSquaresManager.SetColor(Color.white);
     }
 
     public void RestartLevel() {

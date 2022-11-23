@@ -214,6 +214,8 @@ public class LevelEditorEscapeMenuController : MonoBehaviour {
         data.SortTilesList();
         data.SortLines();
 
+        var offset = new Vector2(18, 18);
+
         bool launchPadsInsideLevel = true;
         bool landingPadsInsideLevel = true;
         foreach (LevelObject obj in data.levelData) {
@@ -225,21 +227,21 @@ public class LevelEditorEscapeMenuController : MonoBehaviour {
                     var upDirection = new Vector2(Mathf.Sin((-ent.rotation) * Mathf.Deg2Rad), Mathf.Cos((-ent.rotation) * Mathf.Deg2Rad));
                     var rightDirection = new Vector2(Mathf.Sin((-ent.rotation + 90) * Mathf.Deg2Rad), Mathf.Cos((-ent.rotation + 90) * Mathf.Deg2Rad));
 
-                    var leftBottomCorner = ent.GetPosition() - rightDirection * 0.725f + upDirection * 0.175f;
-                    var rightBottomCorner = ent.GetPosition() + rightDirection * 0.725f + upDirection * 0.175f;
-                    var leftTopCorner = ent.GetPosition() - rightDirection * 0.725f + upDirection * 0.525f;
-                    var rightTopCorner = ent.GetPosition() + rightDirection * 0.725f + upDirection * 0.525f;
+                    var leftBottomCorner = ent.GetPosition() - rightDirection * 0.725f + upDirection * 0.175f + offset;
+                    var rightBottomCorner = ent.GetPosition() + rightDirection * 0.725f + upDirection * 0.175f + offset;
+                    var leftTopCorner = ent.GetPosition() - rightDirection * 0.725f + upDirection * 0.525f + offset;
+                    var rightTopCorner = ent.GetPosition() + rightDirection * 0.725f + upDirection * 0.525f + offset;
 
                     if (ent.resourceName == "Ship Pads/Launch Pad")
                     {
-                        if (!data.IsPointInLevelNew(leftBottomCorner) || !data.IsPointInLevelNew(rightBottomCorner) || !data.IsPointInLevelNew(leftTopCorner) || !data.IsPointInLevelNew(rightTopCorner))
+                        if (data.IsPointInLevelNew(leftBottomCorner) || data.IsPointInLevelNew(rightBottomCorner) || data.IsPointInLevelNew(leftTopCorner) || data.IsPointInLevelNew(rightTopCorner))
                         {
                             launchPadsInsideLevel = false;
                         }
                     }
                     if (ent.resourceName == "Ship Pads/Land Pad")
                     {
-                        if (!data.IsPointInLevelNew(leftBottomCorner) || !data.IsPointInLevelNew(rightBottomCorner) || !data.IsPointInLevelNew(leftTopCorner) || !data.IsPointInLevelNew(rightTopCorner))
+                        if (data.IsPointInLevelNew(leftBottomCorner) || data.IsPointInLevelNew(rightBottomCorner) || data.IsPointInLevelNew(leftTopCorner) || data.IsPointInLevelNew(rightTopCorner))
                         {
                             landingPadsInsideLevel = false;
                         }

@@ -153,7 +153,7 @@ public class PlayerShipController : MonoBehaviour {
 
         if (Time.time == 0) return;
 
-        ghostReplayId = GhostReplayRecorder.Singleton.GetCurrentGhostReplay().GetNewGhostReplayId();
+        if(SceneManager.GetActiveScene().buildIndex != 0) ghostReplayId = GhostReplayRecorder.Singleton.GetCurrentGhostReplay().GetNewGhostReplayId();
 
         #region Setting the ship's skin
         if (NetworkingManager.CurrentLobbyValid && SceneManager.GetActiveScene().name != "Main Menu") { //we are not in a lobby

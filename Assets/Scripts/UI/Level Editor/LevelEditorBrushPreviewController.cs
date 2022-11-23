@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(LineRenderer))]
@@ -26,6 +26,13 @@ public class LevelEditorBrushPreviewController : MonoBehaviour
 
         Singleton.lineRenderer.startColor = new Color(1f, 1f, 1f, hardness);
         Singleton.lineRenderer.endColor = Singleton.lineRenderer.startColor;
+    }
+
+    public static void SetVisible(bool visible)
+    {
+        if (Singleton == null) return;
+
+        Singleton.lineRenderer.enabled = visible;
     }
 
     private LineRenderer lineRenderer;

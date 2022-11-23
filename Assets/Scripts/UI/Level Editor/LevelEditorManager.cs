@@ -62,7 +62,7 @@ public class LevelEditorManager : MonoBehaviour {
         mainCamera = Camera.main;
 
         MarchingSquaresManager.CreateBlank();
-        MarchingSquaresManager.GenerateMesh();
+        MarchingSquaresManager.GenerateMeshAndCollisions();
 
         levelData.levelMapValues = MarchingSquaresManager.GetValues();
 
@@ -205,13 +205,13 @@ public class LevelEditorManager : MonoBehaviour {
         if(newData.levelMapValues != null)
         {
             MarchingSquaresManager.SetData(newData.levelMapValues);
-            MarchingSquaresManager.GenerateMesh();
         }
         else
         {
             MarchingSquaresManager.SetDataFromOldLevel(newData);
-            MarchingSquaresManager.GenerateMesh();
+            Singletron.levelData.levelMapValues = MarchingSquaresManager.GetValues();
         }
+        MarchingSquaresManager.GenerateMeshAndCollisions();
 
         //Go through all entities and tiles in new loaded `LevelData` and instantiate them inside the level editor
         foreach (LevelObject obj in newData.levelData) {
