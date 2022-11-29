@@ -6496,7 +6496,7 @@ Canvas:
   serializedVersion: 3
   m_RenderMode: 1
   m_Camera: {fileID: 18245923}
-  m_PlaneDistance: 100
+  m_PlaneDistance: 10
   m_PixelPerfect: 1
   m_ReceivesEvents: 1
   m_OverrideSorting: 0
@@ -6504,7 +6504,7 @@ Canvas:
   m_SortingBucketNormalizedSize: 0
   m_AdditionalShaderChannelsFlag: 25
   m_SortingLayerID: 0
-  m_SortingOrder: 10
+  m_SortingOrder: 999
   m_TargetDisplay: 0
 --- !u!224 &384622094
 RectTransform:

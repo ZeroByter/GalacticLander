@@ -29,6 +29,11 @@ public class LevelSelectionManager : MonoBehaviour {
     /// </summary>
     public Color gravityModeOtherSelectedColor = Color.white;
 
+    [Header("Toggle view legacy levels button")]
+    public GameObject viewLegacyLevelsButton;
+    public GameObject viewDefaultLevelsButton;
+
+    private bool legacyLevelsLastViewedSingleplayer = true;
     private string levelEditorLevelsPath;
 
     private void OnEnable() {
@@ -62,20 +67,104 @@ public class LevelSelectionManager : MonoBehaviour {
         UpdateGravityVoteUI();
     }
 
-    public void ShowDefaultList() {
+    private void ShowViewLegacyLevels(bool show)
+    {
+        viewLegacyLevelsButton.SetActive(show);
+        viewDefaultLevelsButton.SetActive(!show);
+    }
+
+    private void HideLegacyLevelsButtons()
+    {
+        viewLegacyLevelsButton.SetActive(false);
+        viewDefaultLevelsButton.SetActive(!false);
+    }
+
+    public void ShowDefaultList()
+    {
         ClearLevelsList();
 
-        for (int i = 0; i < levels; i++) {
-            CreateLevelTemplate((i + 1).ToString());
+        for (int i = 0; i < 30; i++)
+        {
+            CreateLevelTemplate((i + 1).ToString(), false, false);
+        }
+
+        legacyLevelsLastViewedSingleplayer = true;
+        ShowViewLegacyLevels(true);
+        MoveLegacyButtonsToEndOfList();
+    }
+
+    public void ShowLegacyDefaultList()
+    {
+        ClearLevelsList();
+
+        for (int i = 0; i < 20; i++)
+        {
+            CreateLevelTemplate((i + 1).ToString(), false, true);
+        }
+
+        legacyLevelsLastViewedSingleplayer = true;
+        ShowViewLegacyLevels(false);
+        MoveLegacyButtonsToEndOfList();
+    }
+
+    public void ShowDefaultOverrideCoopList()
+    {
+        ClearLevelsList();
+
+        for (int i = 0; i < 30; i++)
+        {
+            CreateLevelTemplate((i + 1).ToString(), true, false);
+        }
+
+        legacyLevelsLastViewedSingleplayer = false;
+        ShowViewLegacyLevels(true);
+        MoveLegacyButtonsToEndOfList();
+    }
+
+    public void ShowDefaultOverrideCoopLegacyList()
+    {
+        ClearLevelsList();
+
+        for (int i = 0; i < 20; i++)
+        {
+            CreateLevelTemplate((i + 1).ToString(), true, true);
+        }
+
+        legacyLevelsLastViewedSingleplayer = false;
+        ShowViewLegacyLevels(false);
+        MoveLegacyButtonsToEndOfList();
+    }
+
+    public void ShowRegularsLevelsList()
+    {
+        if (legacyLevelsLastViewedSingleplayer)
+        {
+            ShowDefaultList();
+        }
+        else
+        {
+            ShowDefaultOverrideCoopList();
         }
     }
 
-    public void ShowDefaultOverrideCoopList() {
-        ClearLevelsList();
-
-        for (int i = 0; i < TotalCoopLevels; i++) {
-            CreateLevelTemplate((i + 1).ToString(), true);
+    public void ShowLegacyLevelsList()
+    {
+        if (legacyLevelsLastViewedSingleplayer)
+        {
+            ShowLegacyDefaultList();
         }
+        else
+        {
+            ShowDefaultOverrideCoopLegacyList();
+        }
+    }
+
+    private void MoveLegacyButtonsToEndOfList()
+    {
+        var itemCount = template.transform.parent.childCount;
+
+        viewDefaultLevelsButton.transform.SetSiblingIndex(itemCount - 1);
+        viewLegacyLevelsButton.transform.SetSiblingIndex(itemCount - 2);
     }
 
     public void ShowLevelEditorList() {
@@ -85,10 +174,13 @@ public class LevelSelectionManager : MonoBehaviour {
             DirectoryInfo folderInfo = new DirectoryInfo(levelEditorLevelsPath);
             foreach(FileInfo file in folderInfo.GetFiles()) {
                 if(file.Extension == ".level") {
-                    CreateLevelTemplate(file.FullName);
+                    CreateLevelTemplate(file.FullName, false, false);
                 }
             }
         }
+
+        MoveLegacyButtonsToEndOfList();
+        HideLegacyLevelsButtons();
     }
 
     public void ShowWorkshopList() {
@@ -101,21 +193,30 @@ public class LevelSelectionManager : MonoBehaviour {
             EItemState itemState = (EItemState)SteamUGC.GetItemState(file);
 
             if (itemState.HasFlag(EItemState.k_EItemStateInstalled)) {
-                CreateLevelTemplate("workshop:" + file.m_PublishedFileId.ToString());
+                CreateLevelTemplate("workshop:" + file.m_PublishedFileId.ToString(), false, false);
             }
         }
+
+        MoveLegacyButtonsToEndOfList();
+        HideLegacyLevelsButtons();
     }
 
     public void ClearLevelsList() {
+        var itemCount = template.transform.parent.childCount;
+        var index = -1;
+
         foreach(Transform template in template.transform.parent) {
+            index++;
             if (this.template.coopLevel && template.GetSiblingIndex() == 0) continue; //dont delete the first element which is intended for when the other player votes for a level we are not subscribed to
+            if (index > itemCount - 3) continue;
             if (template.gameObject.activeSelf) Destroy(template.gameObject); //only delete active templates
         }
     }
 
-    private void CreateLevelTemplate(string levelName, bool overrideMpLevel = false) {
+    private void CreateLevelTemplate(string levelName, bool coop, bool legacy) {
         LevelSelectionController controller = Instantiate(template, template.transform.parent).GetComponent<LevelSelectionController>();
-        if (overrideMpLevel) controller.levelDirPrefix = "mp";
+        if (coop) controller.levelDirPrefix = "mp";
+        if (legacy) controller.levelDirPrefix = "o" + controller.levelDirPrefix;
         controller.Setup(levelName);
     }
 

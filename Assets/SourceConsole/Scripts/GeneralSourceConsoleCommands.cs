@@ -25,7 +25,7 @@ public static class GeneralSourceConsoleCommands
         if (levelName == "") return;
 
         var origin = LevelLoader.LevelOrigin.External;
-        if (levelName.StartsWith("sp") || levelName.StartsWith("mp")) origin = LevelLoader.LevelOrigin.Game;
+        if (levelName.StartsWith("sp") || levelName.StartsWith("mp") || levelName.StartsWith("osp") || levelName.StartsWith("omp")) origin = LevelLoader.LevelOrigin.Game;
 
         LevelLoader.SetLevelDirectory(origin, levelName);
         SceneManager.LoadScene("Game Level");

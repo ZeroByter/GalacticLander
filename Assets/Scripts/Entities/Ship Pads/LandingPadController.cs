@@ -132,6 +132,8 @@ public class LandingPadController : MonoBehaviour {
                 if (lightsController.progress < 0.95f) {
                     if (!selfAudio.isPlaying) selfAudio.Play();
                     selfAudio.pitch = Mathf.Lerp(0, 2, capturingProgress / maxCapture);
+                    if (selfAudio.pitch < 0.01) selfAudio.pitch = 0;
+                    if (selfAudio.pitch > 0.99) selfAudio.pitch = 1;
                 } else {
                     if (VictoryMenuController.Singletron.isOpen) {
                         selfAudio.volume = Mathf.Lerp(selfAudio.volume, 0, 0.04f);

@@ -33,15 +33,15 @@ public class FirstLevelTutorialController : MonoBehaviour {
 
             levelData = LevelLoader.Singletron.levelData;
 
-            middleOfLevelText.transform.position = Vector2.Lerp(levelData.GetLaunchPad().GetPosition(), levelData.GetLandPad().GetPosition(), 0.5f) + new Vector2(0, 1);
+            middleOfLevelText.transform.position = Vector2.Lerp(levelData.GetLaunchPad().GetPosition(), levelData.GetLandPad().GetPosition(), 0.5f) + new Vector2(0, 2);
 
         }
     }
 
     private void Update() {
         if (showText) {
-            topText.color = new Color(1, 1, 1, Mathf.Lerp(0, 1, Time.timeSinceLevelLoad / 2 ));
-            middleText.color = new Color(1, 1, 1, Mathf.Lerp(0, 1, Time.timeSinceLevelLoad / 2));
+            topText.color = new Color(1, 1, 1, Mathf.Lerp(0, 1, Time.timeSinceLevelLoad / 3));
+            middleText.color = new Color(1, 1, 1, Mathf.Lerp(0, 1, Time.timeSinceLevelLoad / 3 - 1.5f));
             bottomText.color = new Color(1, 1, 1, Mathf.Lerp(0, 1, Time.timeSinceLevelLoad / 2 - 3));
 
             if(levelData != null) {
