@@ -8,17 +8,40 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using Steamworks;
 using UnityEditor;
+using System.Linq;
 
 public class LevelEditorSaveMenu : MonoBehaviour {
     private static LevelEditorSaveMenu Singletron;
+
+    public static void SetSaveLevelName(string name)
+    {
+        if (Singletron == null) return;
+
+        Singletron.newSaveLevelNameInput.text = name;
+    }
+
+    public static void SetCurrentLevelFileDirectory(string dir)
+    {
+        if (Singletron == null) return;
+
+        Singletron.currentLevelFileDirectory = dir;
+    }
+
+    public static string GetCurrentLevelFileDirectory()
+    {
+        if (Singletron == null) return null;
+
+        return Singletron.currentLevelFileDirectory;
+    }
 
     [Header("The transition")]
     public CanvasBlurTransition transition;
     [Header("Level template")]
     public SavedLevelItemController template;
     [Header("Save level panel")]
-    public GameObject saveLevelPrompt;
+    //public GameObject saveLevelPrompt;
     public TMP_InputField newSaveLevelNameInput;
+    public Button newSaveLevelButton;
     [Header("Migrate old level panel")]
     public GameObject migrateOldLevelPrompt;
     public Button beginCurrentLevelMigrationButton;
@@ -29,6 +52,7 @@ public class LevelEditorSaveMenu : MonoBehaviour {
     public TMP_InputField levelNameInput;
     public TMP_Text levelStats;
     public Button loadCurrentLevelButton;
+    public Button saveLevelButton;
     [Header("Camera transition stuff")]
     public GameObject mainCamera;
     public GameObject screenshotCanvas;
@@ -58,18 +82,31 @@ public class LevelEditorSaveMenu : MonoBehaviour {
     private string selectedLevelName;
     private string saveNewLevelName;
 
+    [HideInInspector]
+    public bool isCurrentlySaving;
+
     private void Awake() {
         Singletron = this;
 
         template.gameObject.SetActive(false);
 
+        newSaveLevelNameInput.onValueChanged.AddListener(HandleSaveLevelInputChange);
+        newSaveLevelNameInput.onSubmit.AddListener(HandleSaveLevelInputSubmit);
+        newSaveLevelButton.onClick.AddListener(HandleSaveLevelButtonClick);
+
         loadCurrentLevelButton.onClick.AddListener(HandleLoadCurrentLevelButtonClick);
+        saveLevelButton.onClick.AddListener(HandleSaveLevelButtonClick);
         beginCurrentLevelMigrationButton.onClick.AddListener(HandleBeginCurrentLevelMigrationClick);
     }
 
     private void OnDestroy()
     {
+        newSaveLevelNameInput.onValueChanged.RemoveListener(HandleSaveLevelInputChange);
+        newSaveLevelNameInput.onSubmit.RemoveListener(HandleSaveLevelInputSubmit);
+        newSaveLevelButton.onClick.RemoveListener(HandleSaveLevelButtonClick);
+
         loadCurrentLevelButton.onClick.RemoveListener(HandleLoadCurrentLevelButtonClick);
+        saveLevelButton.onClick.RemoveListener(HandleSaveLevelButtonClick);
         beginCurrentLevelMigrationButton.onClick.RemoveListener(HandleBeginCurrentLevelMigrationClick);
     }
 
@@ -114,13 +151,13 @@ public class LevelEditorSaveMenu : MonoBehaviour {
     private void CreateTemplate(string dir) {
         if (File.Exists(dir)) {
             SavedLevelItemController newTemplate = Instantiate(template, template.transform.parent);
-            newTemplate.Setup(dir);
+            newTemplate.Setup(dir, dir == currentLevelFileDirectory);
         }
     }
 
     private void LoadLevelsList() {
-        currentLevelData = null;
-        currentLevelFileDirectory = "";
+        //currentLevelData = null;
+        //currentLevelFileDirectory = "";
         levelInfoPanel.SetActive(false);
         foreach (Transform oldTemplate in template.transform.parent) {
             if (oldTemplate.gameObject.activeSelf) Destroy(oldTemplate.gameObject);
@@ -131,18 +168,39 @@ public class LevelEditorSaveMenu : MonoBehaviour {
         Directory.CreateDirectory(levelsDir);
 
         //go through all files in this
-        foreach(string fileDir in Directory.GetFiles(levelsDir)) {
-            if (fileDir.EndsWith(".level")){
-                CreateTemplate(fileDir);
+        var allFileStrings = Directory.GetFiles(levelsDir);
+        var allFiles = new List<FileInfo>();
+
+        foreach (var fileDir in allFileStrings)
+        {
+            if (fileDir.EndsWith(".level"))
+            {
+                allFiles.Add(new FileInfo(fileDir));
             }
+        }
+
+        allFiles.Sort(delegate (FileInfo a, FileInfo b)
+        {
+            return b.LastWriteTime.CompareTo(a.LastWriteTime);
+        });
+
+        foreach (var fileInfo in allFiles) {
+            CreateTemplate(fileInfo.FullName);
         }
     }
 
     public void ShowOpenLevel() {
         transition.OpenMenu();
 
-        saveLevelPrompt.SetActive(false);
+        isCurrentlySaving = false;
+
+        newSaveLevelNameInput.transform.parent.gameObject.SetActive(false);
+
+        loadCurrentLevelButton.gameObject.SetActive(true);
+        saveLevelButton.gameObject.SetActive(false);
+
         migrateOldLevelPrompt.SetActive(false);
+        //saveLevelPrompt.SetActive(false);
 
         LoadLevelsList();
     }
@@ -151,12 +209,18 @@ public class LevelEditorSaveMenu : MonoBehaviour {
     {
         transition.OpenMenu();
 
+        isCurrentlySaving = true;
+
+        loadCurrentLevelButton.gameObject.SetActive(false);
+        saveLevelButton.gameObject.SetActive(true);
+
         migrateOldLevelPrompt.SetActive(false);
-        saveLevelPrompt.SetActive(true);
-        newSaveLevelNameInput.text = "";
-        newSaveLevelNameInput.ActivateInputField();
 
         LoadLevelsList();
+
+        //saveLevelPrompt.SetActive(true);
+        newSaveLevelNameInput.transform.parent.gameObject.SetActive(true);
+        newSaveLevelNameInput.ActivateInputField();
 
         LevelEditorEscapeMenuController.Singletron.CheckIfShouldBeOpen();
     }
@@ -166,7 +230,7 @@ public class LevelEditorSaveMenu : MonoBehaviour {
         transition.OpenMenu();
 
         migrateOldLevelPrompt.SetActive(true);
-        saveLevelPrompt.SetActive(false);
+        //saveLevelPrompt.SetActive(false);
 
         LevelEditorEscapeMenuController.Singletron.CheckIfShouldBeOpen();
     }
@@ -176,6 +240,19 @@ public class LevelEditorSaveMenu : MonoBehaviour {
     }
 
     public void SelectLevel(LevelData levelData, string fileName) {
+        if(levelData == null)
+        {
+            currentLevelData = null;
+            currentLevelFileDirectory = null;
+            HideLevelName();
+            levelInfoPanel.SetActive(false);
+
+            levelName.text = "";
+            selectedLevelName = null;
+
+            return;
+        }
+
         currentLevelData = levelData;
         currentLevelFileDirectory = fileName;
         ShowLevelName();
@@ -184,13 +261,20 @@ public class LevelEditorSaveMenu : MonoBehaviour {
         levelName.text = Path.GetFileName(currentLevelFileDirectory).Replace(".level", "");
         selectedLevelName = levelName.text;
 
+        if (isCurrentlySaving)
+        {
+            newSaveLevelNameInput.text = levelName.text;
+            saveNewLevelName = levelName.text;
+        }
+
         StringBuilder levelStatsString = new StringBuilder();
         levelStatsString.AppendLine(string.Format("Time created: {0} {1}", levelData.timeCreated.ToLongTimeString(), levelData.timeCreated.ToLongDateString()));
         levelStatsString.AppendLine();
         levelStatsString.AppendLine(string.Format("Time modified: {0} {1}", levelData.lastModified.ToLongTimeString(), levelData.lastModified.ToLongDateString()));
         levelStats.text = levelStatsString.ToString();
 
-        string previewImageDirectory = currentLevelFileDirectory.Replace(".level", ".png");
+        string previewImageDirectory = fileName.Replace(".level", ".png");
+
         if (File.Exists(previewImageDirectory)) {
             levelPreviewImage.transform.parent.gameObject.SetActive(true);
 
@@ -204,7 +288,14 @@ public class LevelEditorSaveMenu : MonoBehaviour {
         }
     }
 
-    public void ShowLevelName() {
+    public void HideLevelName()
+    {
+        levelName.gameObject.SetActive(false);
+        levelNameInput.gameObject.SetActive(false);
+    }
+
+    public void ShowLevelName()
+    {
         levelName.gameObject.SetActive(true);
         levelNameInput.gameObject.SetActive(false);
     }
@@ -274,7 +365,7 @@ public class LevelEditorSaveMenu : MonoBehaviour {
         screenshotCameraPositions.Add(levelData.GetBounds().max);
 
         screenshotCamera.transform.position = GetAveragePosition();
-        screenshotCamera.orthographicSize = GetRequiredSize(levelData.levelMapValues == null ? 5 : 0);
+        screenshotCamera.orthographicSize = GetRequiredSize(5);
     }
     #endregion
 
@@ -338,7 +429,7 @@ public class LevelEditorSaveMenu : MonoBehaviour {
         Singletron.BeginTakeScreenshot(saveToPath);
     }
 
-    private void SaveNewLevel() {
+    public void SaveNewLevel() {
         string levelsDir = Application.persistentDataPath + "/Level Editor/Levels/";
         FileStream file = File.Open(levelsDir + saveNewLevelName + ".level", FileMode.OpenOrCreate);
         BinaryFormatter bf = new BinaryFormatter();
@@ -388,7 +479,7 @@ public class LevelEditorSaveMenu : MonoBehaviour {
 
             LoadLevelsList();
             currentLevelData = null;
-            currentLevelFileDirectory = "";
+            currentLevelFileDirectory = null;
             levelInfoPanel.SetActive(false);
         }
     }
@@ -433,9 +524,33 @@ public class LevelEditorSaveMenu : MonoBehaviour {
         }
     }
 
+    private void HandleSaveLevelInputChange(string newValue)
+    {
+        if(SavedLevelItemController.Controllers.TryGetValue(newValue, out var controller))
+        {
+            if(controller != null) controller.TriggerSelectLevel();
+        }
+        else
+        {
+            SelectLevel(null, null);
+        }
+    }
+
     private void HandleLoadCurrentLevelButtonClick()
     {
         LoadCurrentLevelToEditor("", false);
+    }
+
+    private void HandleSaveLevelInputSubmit(string value)
+    {
+        saveNewLevelName = value;
+
+        SaveNewLevel();
+    }
+
+    private void HandleSaveLevelButtonClick()
+    {
+        SaveNewLevel();
     }
 
     private void HandleBeginCurrentLevelMigrationClick()

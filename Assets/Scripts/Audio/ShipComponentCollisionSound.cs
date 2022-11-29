@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(AudioSource))]
 public class ShipComponentCollisionSound : MonoBehaviour {
@@ -32,6 +33,7 @@ public class ShipComponentCollisionSound : MonoBehaviour {
     }
 
     private void OnCollisionEnter2D(Collision2D collision) {
+        if (SceneManager.GetActiveScene().buildIndex == 0) return;
         if (soundSource.isPlaying) return;
         if (collision.relativeVelocity.magnitude <= 1f) return;
         if (collision.gameObject.tag == "Player") return;

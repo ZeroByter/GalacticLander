@@ -46,17 +46,13 @@ public class MarchingSquaresChunkController : MonoBehaviour
 
         GenerateMeshAndCollisions(false, true);
 
-        var collisionsObject = new GameObject();
         foreach (var linkedEdges in linkedEdgesList)
         {
             if (linkedEdges.Count == 0) continue;
 
-            var collider = collisionsObject.AddComponent<EdgeCollider2D>();
+            var collider = gameObject.AddComponent<EdgeCollider2D>();
             collider.points = linkedEdges.ToArray();
         }
-        collisionsObject.transform.parent = transform;
-        collisionsObject.transform.localPosition = Vector3.zero;
-        collisionsObject.transform.localScale = Vector3.one;
     }
 
     public void GenerateMeshAndCollisions(bool generateMesh, bool generateCollisions)

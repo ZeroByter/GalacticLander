@@ -27,7 +27,7 @@ public class ShipSensorPadController : MonoBehaviour {
 
     private void OnCollisionEnter2D(Collision2D collision) {
         if (collision.gameObject.tag == "Player") {
-            isCapturing = collision.transform.position.y > transform.position.y;
+            isCapturing = true;
             lastStartedCapturing = Time.time;
         }
     }

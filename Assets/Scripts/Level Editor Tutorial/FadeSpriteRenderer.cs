@@ -15,7 +15,6 @@ public class FadeSpriteRenderer : MonoBehaviour
     [SerializeField]
     private float speed = 0.5f;
 
-    private float i;
     private float sin;
 
     private SpriteRenderer spriteRenderer;
@@ -27,8 +26,7 @@ public class FadeSpriteRenderer : MonoBehaviour
 
     private void Update()
     {
-        i += speed;
-        sin = (Mathf.Sin(i) + 1) / 2;
+        sin = (Mathf.Sin(Time.time * speed) + 1) / 2;
 
         spriteRenderer.color = new Color(spriteRenderer.color.r, spriteRenderer.color.g, spriteRenderer.color.b, Mathf.Lerp(min, max, sin));
     }

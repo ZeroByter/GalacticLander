@@ -120,7 +120,7 @@ public class MissileController : MonoBehaviour {
 
         float targetDistance = Vector3.Distance(closestShipPosition, transform.position);
 
-        var rayHit = Physics2D.Raycast(missileTransform.position, missileTransform.up, 0.33f, layersMask);
+        var rayHit = Physics2D.Raycast(missileTransform.position + missileTransform.up * 0.251f, missileTransform.up, 0.1f);
         if (rayHit)
         {
             if(rayHit.transform.gameObject.layer == 10)

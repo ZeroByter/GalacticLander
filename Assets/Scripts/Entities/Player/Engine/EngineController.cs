@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class EngineController : ShipComponentController {
 
-    public enum ThrustDirection { None, UpOnly, LeftOnly, RightOnly, Any }
+    public enum ThrustDirection { None, UpOnly, LeftOnly, RightOnly, Any, MainMenuAuto }
     [Header("The direction in which we can push")]
     public ThrustDirection thrustDirection = ThrustDirection.Any;
     /// <summary>
@@ -224,19 +224,19 @@ public class EngineController : ShipComponentController {
                     enableParticleEmissions = true;
                 }
             }
-            if (thrustDirection == ThrustDirection.LeftOnly) {
+            else if (thrustDirection == ThrustDirection.LeftOnly) {
                 if (isPressingLeft) {
                     parentRigidbody.AddForce(-transform.right * thrustForce * thrustModifier);
                     enableParticleEmissions = true;
                 }
             }
-            if (thrustDirection == ThrustDirection.RightOnly) {
+            else if (thrustDirection == ThrustDirection.RightOnly) {
                 if (isPressingRight) {
                     parentRigidbody.AddForce(transform.right * thrustForce * thrustModifier);
                     enableParticleEmissions = true;
                 }
             }
-            if (thrustDirection == ThrustDirection.Any) {
+            else if (thrustDirection == ThrustDirection.Any) {
                 bool bothPressed = isPressingLeft && isPressingRight;
 
                 if (isPressingLeft && isOnLeftSide && !bothPressed) {
@@ -248,6 +248,14 @@ public class EngineController : ShipComponentController {
                 } else if (isPressingLeft && isPressingRight) {
                     parentRigidbody.AddForceAtPosition(transform.up * thrustForce * thrustModifier, transform.position);
                     enableParticleEmissions = true;
+                }
+            }
+            else if (thrustDirection == ThrustDirection.MainMenuAuto)
+            {
+                enableParticleEmissions = parentRigidbody.position.y < 5.5f && parentRigidbody.velocity.magnitude > 0.6f;
+                if (enableParticleEmissions)
+                {
+                    parentRigidbody.AddForce(transform.up * thrustForce * thrustModifier);
                 }
             }
 

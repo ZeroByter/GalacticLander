@@ -26,6 +26,8 @@ public class LevelEditorTutorialManager : MonoBehaviour {
     private Button nextStageButton;
     [Header("Actual tutorial elements")]
     [SerializeField]
+    private GameObject terrainGuideTemplate;
+    [SerializeField]
     private GameObject buildLevelOutline;
     [SerializeField]
     private GameObject launchHalo;
@@ -37,6 +39,8 @@ public class LevelEditorTutorialManager : MonoBehaviour {
     private GameObject sensorHalo;
     [SerializeField]
     private GameObject doorHalo;
+    [SerializeField]
+    private GameObject crateHalo;
 
     [SerializeField]
     private RectTransform rectTransform;
@@ -62,12 +66,10 @@ public class LevelEditorTutorialManager : MonoBehaviour {
         }
     }
 
-    private LevelEntity doorEntity;
-    private LevelEntity sensorEntity;
-
     private bool shouldFollowWorktablePosition;
     private Vector2 followWorktablePosition;
 
+    private GameObject terrainGuidesParent;
     private Vector2[] tutorialEmptyPositions = new Vector2[] {
         new Vector2(115,72),
         new Vector2(116,72),
@@ -1147,12 +1149,17 @@ public class LevelEditorTutorialManager : MonoBehaviour {
 
         tutorialTextCanvasGroup.ForceAlpha(0);
 
+        terrainGuidesParent = new GameObject("Terrain Guide Parent");
+        terrainGuidesParent.SetActive(false);
+
         buildLevelOutline.SetActive(false);
         launchHalo.SetActive(false);
         landHalo.SetActive(false);
         sensorHalo.SetActive(false);
         doorHalo.SetActive(false);
-        
+        crateHalo.SetActive(false);
+
+
         nextStageButton.interactable = false;
 
         rect = rectTransform.rect;
@@ -1169,6 +1176,14 @@ public class LevelEditorTutorialManager : MonoBehaviour {
 
         UpdateTutorialText();
         enableTutorial = true;
+
+        foreach(var p in tutorialEmptyPositions)
+        {
+            var marker = Instantiate(terrainGuideTemplate);
+            marker.transform.parent = terrainGuidesParent.transform;
+            marker.transform.position = p / 150f * 36f - new Vector2(18, 18);
+            marker.gameObject.SetActive(true);
+        }
 
         StartCoroutine(CheckNextStageConditionsLoop());
     }
@@ -1221,12 +1236,12 @@ public class LevelEditorTutorialManager : MonoBehaviour {
         switch (tutorialStage)
         {
             case 0:
-                ShowTutorialText("Hello! Let's begin by building a simple level outline. Hold down the left mouse button and drag the mouse over the white arrow outline. It doesn't have to be exact, but make sure that every tile has atleast one non-diagonal tile neighbor (meaning no diagonal corners)");
-                buildLevelOutline.SetActive(true);
+                ShowTutorialText("Hello! Let's start by carving out our level! Hold down the left mouse button to remove terrain, and the right mouse button to place it back. I highlighted where you should remove terrain so that we can continue.");
+                terrainGuidesParent.SetActive(true);
                 break;
             case 1:
                 ShowTutorialText("Excellent! Now let's move the landing pad to it's correct place, highlighted by the red fading icon to the right.");
-                buildLevelOutline.SetActive(false);
+                terrainGuidesParent.SetActive(false);
                 landHalo.SetActive(true);
 
                 shouldFollowWorktablePosition = true;
@@ -1234,20 +1249,21 @@ public class LevelEditorTutorialManager : MonoBehaviour {
             case 2:
                 shouldFollowWorktablePosition = false;
                 landHalo.SetActive(false);
-                nextStageButton.interactable = true;
+                crateHalo.SetActive(true);
                 CursorController.RemoveUser("HoverPointer");
-                ShowTutorialText("Mistakes happen, and sometimes we place down tiles or entities we don't want. Luckily we have the eraser tool! Press 'A' on your keyboard to toggle between the eraser tool and hold down the left mouse button over anything you want to erase. (Click to continue)");
+                ShowTutorialText("Place down a cute little Crate right above the launch pad, I think that would be a great spot for it! Click the icon-button titled 'crate' from the left panel and place the crate down at the highlighted area.");
                 break;
             case 3:
                 shouldFollowWorktablePosition = true;
                 followWorktablePosition = doorHalo.transform.position + new Vector3(0, -3);
+                crateHalo.SetActive(false);
                 doorHalo.SetActive(true);
-                ShowTutorialText("Lets place down a door in the middle of the level, in-between the launch and landing pad. Click the icon-button titled 'door' from the left panel and place the door over the highlighted area.");
+                ShowTutorialText("Let's also place down a door in the middle of the level, in-between the launch and landing pad.");
                 break;
             case 4:
                 doorHalo.SetActive(false);
                 followWorktablePosition = sensorHalo.transform.position + new Vector3(0, -1);
-                ShowTutorialText("Great! Now we need a way to open the door. Place down a 'ship sensor pad' at the highlighted location (or anywhere else thats <i>inside</i> the level, keep in mind the player will need a way to get to the sensor).");
+                ShowTutorialText("Great! Now we need a way to open the door. Place down a 'ship sensor pad' at the highlighted location (or anywhere else in the level, keep in mind the player will need a way to get to the sensor).");
                 sensorHalo.SetActive(true);
                 break;
             case 5:
@@ -1257,6 +1273,10 @@ public class LevelEditorTutorialManager : MonoBehaviour {
                 ShowTutorialText("Now, if only the door and ship sensor were connected somehow! Hold down the left-alt key and click on the ship sensor, then on the door, and let go of the alt key to logic-connect the door and the ship sensor.");
                 break;
             case 6:
+                shouldFollowWorktablePosition = false;
+                ShowTutorialText("Huh? Who placed that crate above the launch pad? That seems like a terrible idea! In order to delete it, either select 'eraser' from the center bottom panel, or press 'A' to select the eraser, and delete the crate");
+                break;
+            case 7:
                 nextStageButton.interactable = true;
                 shouldFollowWorktablePosition = false;
                 ShowTutorialText("All done! If the level is enough to your liking, save your level by pressing 'CTRL+S', press 'escape' and click the 'playtest' button at the top of the screen!");
@@ -1271,12 +1291,10 @@ public class LevelEditorTutorialManager : MonoBehaviour {
         }
     }
 
-    //TODO: Move this to regular level editor scene!
-
     private void GetIfPadsInsideLevel(out bool launchPadsInsideLevel, out bool landingPadsInsideLevel)
     {
-        int numberOfLaunchingPads = 0;
-        int numberOfLandingPads = 0;
+
+        var offset = new Vector2(18, 18);
         launchPadsInsideLevel = true;
         landingPadsInsideLevel = true;
         foreach (LevelObject obj in levelData.levelData)
@@ -1284,24 +1302,64 @@ public class LevelEditorTutorialManager : MonoBehaviour {
             if (obj.GetType() == typeof(LevelEntity))
             {
                 LevelEntity ent = (LevelEntity)obj;
-                if (ent.resourceName == "Ship Pads/Launch Pad")
+                if (ent.resourceName == "Ship Pads/Launch Pad" || ent.resourceName == "Ship Pads/Land Pad")
                 {
-                    numberOfLaunchingPads++;
-                    if (!levelData.IsPointInLevel(ent.GetPosition()))
+                    var upDirection = new Vector2(Mathf.Sin((-ent.rotation) * Mathf.Deg2Rad), Mathf.Cos((-ent.rotation) * Mathf.Deg2Rad));
+                    var rightDirection = new Vector2(Mathf.Sin((-ent.rotation + 90) * Mathf.Deg2Rad), Mathf.Cos((-ent.rotation + 90) * Mathf.Deg2Rad));
+
+                    var leftBottomCorner = ent.GetPosition() - rightDirection * 0.725f + upDirection * 0.175f + offset;
+                    var rightBottomCorner = ent.GetPosition() + rightDirection * 0.725f + upDirection * 0.175f + offset;
+                    var leftTopCorner = ent.GetPosition() - rightDirection * 0.725f + upDirection * 0.525f + offset;
+                    var rightTopCorner = ent.GetPosition() + rightDirection * 0.725f + upDirection * 0.525f + offset;
+
+                    if (ent.resourceName == "Ship Pads/Launch Pad")
                     {
-                        launchPadsInsideLevel = false;
+                        if (levelData.IsPointInLevelNew(leftBottomCorner) || levelData.IsPointInLevelNew(rightBottomCorner) || levelData.IsPointInLevelNew(leftTopCorner) || levelData.IsPointInLevelNew(rightTopCorner))
+                        {
+                            launchPadsInsideLevel = false;
+                        }
                     }
-                }
-                if (ent.resourceName == "Ship Pads/Land Pad")
-                {
-                    numberOfLandingPads++;
-                    if (!levelData.IsPointInLevel(ent.GetPosition()))
+                    if (ent.resourceName == "Ship Pads/Land Pad")
                     {
-                        landingPadsInsideLevel = false;
+                        if (levelData.IsPointInLevelNew(leftBottomCorner) || levelData.IsPointInLevelNew(rightBottomCorner) || levelData.IsPointInLevelNew(leftTopCorner) || levelData.IsPointInLevelNew(rightTopCorner))
+                        {
+                            landingPadsInsideLevel = false;
+                        }
                     }
                 }
             }
         }
+    }
+
+    private bool DoesTutorialLevelMatchGuide()
+    {
+        foreach(var p in tutorialEmptyPositions)
+        {
+            if (LevelEditorManager.GetLevelData().IsPointInLevelNew(p / 150 * 36f)) return false;
+        }
+
+        return true;
+    }
+
+    private LevelEntity GetEntityAtPosition(Vector2 point)
+    {
+        var target = levelData.GetObjectAtPosition(point); //look for the landing pad sensor
+        if (target is LevelEntity && !LevelEditorCursor.IsCurrentlyMovingObject())
+        {
+            return (LevelEntity)target;
+        }
+
+        return null;
+    }
+    private LevelEntity GetEntityAtArea(Vector2 point, float radius)
+    {
+        var target = levelData.GetEntityAtArea(point, radius); //look for the landing pad sensor
+        if (target is LevelEntity && !LevelEditorCursor.IsCurrentlyMovingObject())
+        {
+            return (LevelEntity)target;
+        }
+
+        return null;
     }
 
     private void CheckNextStageConditions()
@@ -1316,38 +1374,37 @@ public class LevelEditorTutorialManager : MonoBehaviour {
                 bool landingPadsInsideLevel;
                 GetIfPadsInsideLevel(out launchPadsInsideLevel, out landingPadsInsideLevel);
 
-                if (levelData.IsLevelInclosed() && levelData.GetTiles().Count > 15 && launchPadsInsideLevel && landingPadsInsideLevel) tutorialStage++;
+                if (launchPadsInsideLevel && landingPadsInsideLevel && DoesTutorialLevelMatchGuide()) tutorialStage++;
                 break;
             case 1:
-                if (Vector2.Distance(levelData.GetLandPad().GetPosition(), new Vector2(8.8f, 0.7f)) < 0.1 && !LevelEditorCursor.IsCurrentlyMovingObject()) tutorialStage++;
+                if (Vector2.Distance(levelData.GetLandPad().GetPosition(), new Vector2(12.33f, -0.62f)) < 0.1 && !LevelEditorCursor.IsCurrentlyMovingObject()) tutorialStage++;
+                break;
+            case 2:
+                var crateObj = GetEntityAtArea(new Vector2(0f, 2f), 0.5f);
+                if (crateObj != null && crateObj.resourceName == "Crate/Crate")
+                {
+                    tutorialStage++;
+                }
                 break;
             case 3:
-                var doorObj = levelData.GetObjectAtPosition(new Vector2(4.5f, 2.5f)); //look for the door
-                if(doorObj is LevelEntity && !LevelEditorCursor.IsCurrentlyMovingObject())
+                var doorObj = GetEntityAtPosition(new Vector2(6.37f, 1.94f));
+                if (doorObj != null && doorObj.resourceName == "Door/Door")
                 {
-                    var entity = (LevelEntity)doorObj;
-                    if(entity.resourceName == "Door/Door")
-                    {
-                        doorEntity = entity;
-                        tutorialStage++;
-                    }
+                    tutorialStage++;
                 }
                 break;
             case 4:
-                var sensorObj = levelData.GetEntityAtArea(new Vector2(2.5f, 0.6f), 0.5f); //look for the landing pad sensor
-                if (sensorObj is LevelEntity && !LevelEditorCursor.IsCurrentlyMovingObject())
+                var sensorObj = GetEntityAtArea(new Vector2(2.8f, 0.2f), 0.5f);
+                if (sensorObj != null && sensorObj.resourceName == "Ship Pads/Ship Sensor Pad")
                 {
-                    var entity = (LevelEntity)sensorObj;
-
-                    if (entity.resourceName == "Ship Pads/Ship Sensor Pad")
-                    {
-                        sensorEntity = entity;
-                        tutorialStage++;
-                    }
+                    tutorialStage++;
                 }
                 break;
             case 5:
-                if(doorEntity == null)
+                var doorEntity = GetEntityAtPosition(new Vector2(6.37f, 1.94f));
+                var sensorEntity = GetEntityAtArea(new Vector2(2.8f, 0.2f), 0.5f);
+
+                if (doorEntity == null)
                 {
                     tutorialStage = 3;
                     return;
@@ -1359,6 +1416,9 @@ public class LevelEditorTutorialManager : MonoBehaviour {
                 }
 
                 if (sensorEntity.logicTarget == doorEntity) tutorialStage++;
+                break;
+            case 6:
+                if (GetEntityAtArea(new Vector2(0f, 2f), 0.5f) == null) tutorialStage++;
                 break;
         }
     }
@@ -1389,7 +1449,7 @@ public class LevelEditorTutorialManager : MonoBehaviour {
             }
             else
             {
-                rectTransform.anchoredPosition = Vector2.Lerp(rectTransform.anchoredPosition, new Vector2(0, 239.9f), 0.2f);
+                rectTransform.anchoredPosition = Vector2.Lerp(rectTransform.anchoredPosition, new Vector2(0, 410f), 0.2f);
             }
 
             if (lastTutorialStage != tutorialStage)

@@ -68,6 +68,12 @@ public class LevelEditorManager : MonoBehaviour {
 
         //awake is called as soon as the level editor scene is loaded
         if (LevelLoader.PlayTestingLevel) { //so if a level is being playtested, we can check so here
+            var tempLevelDirFilePath = Application.persistentDataPath + "/Level Editor/tempLevelPath.txt";
+            if (File.Exists(tempLevelDirFilePath))
+            {
+                LevelEditorSaveMenu.SetCurrentLevelFileDirectory(File.ReadAllText(tempLevelDirFilePath));
+            }
+
             FileStream levelFile = File.Open(Application.persistentDataPath + "/Level Editor/tempLevel.level", FileMode.Open);
             BinaryFormatter bf = new BinaryFormatter();
             SetLevelData((LevelData)bf.Deserialize(levelFile));
@@ -328,6 +334,9 @@ public class LevelEditorManager : MonoBehaviour {
     }
 
     public void PlaytestLevel() {
+        var currentLevelDir = LevelEditorSaveMenu.GetCurrentLevelFileDirectory();
+        if(currentLevelDir != null) File.WriteAllText(Application.persistentDataPath + "/Level Editor/tempLevelPath.txt", currentLevelDir);
+
         string tempLevelPath = Application.persistentDataPath + "/Level Editor/tempLevel.level";
         FileStream file = File.Open(tempLevelPath, FileMode.OpenOrCreate);
         BinaryFormatter bf = new BinaryFormatter();

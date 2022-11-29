@@ -72,6 +72,8 @@ public class LevelEditorCursor : MonoBehaviour {
     private float brushHardness = 10f;
     private float brushSize = 10f;
 
+    private float startedHoldingDownBothQE;
+
     public static bool IsCurrentlyMovingObject()
     {
         if (Singletron == null) return false;
@@ -228,6 +230,10 @@ public class LevelEditorCursor : MonoBehaviour {
                                 prefab = rayHit.transform.gameObject;
                                 movingEntityData = (LevelEntity)@object;
                                 lastMouseClick = Time.time;
+
+                                var existingRotation = movingEntityData.rotation;
+                                if (existingRotation > 180) existingRotation = -(360 - existingRotation);
+                                SetRotation(existingRotation);
                             }
                         }
                     }
@@ -273,8 +279,25 @@ public class LevelEditorCursor : MonoBehaviour {
                     }
 
                     //typical rotation and mirroring things
-                    if (Input.GetKey(KeyCode.Q)) SetRotation(rotation + 175 * Time.deltaTime);
-                    if (Input.GetKey(KeyCode.E)) SetRotation(rotation - 175 * Time.deltaTime);
+                    var holdingDownQ = Input.GetKey(KeyCode.Q);
+                    var holdingDownE = Input.GetKey(KeyCode.E);
+
+                    if (holdingDownQ) SetRotation(rotation + 175 * Time.deltaTime);
+                    if (holdingDownE) SetRotation(rotation - 175 * Time.deltaTime);
+
+                    if(holdingDownQ && holdingDownE)
+                    {
+                        if (startedHoldingDownBothQE == 0) startedHoldingDownBothQE = Time.time;
+                        
+                        if(Time.time - startedHoldingDownBothQE > 0.75f)
+                        {
+                            SetRotation(0);
+                        }
+                    }
+                    else
+                    {
+                        startedHoldingDownBothQE = 0;
+                    }
 
                     if (!movingEntityData.canAdvancedModify)
                     {

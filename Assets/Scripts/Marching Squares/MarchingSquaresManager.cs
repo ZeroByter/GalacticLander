@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MarchingSquaresManager : MonoBehaviour
 {
@@ -11,6 +12,25 @@ public class MarchingSquaresManager : MonoBehaviour
     public static float IsoLevel = 0.5f;
 
     private static MarchingSquaresManager Singleton;
+
+    public static void CreateMainMenu()
+    {
+        if (Singleton == null) return;
+
+        Singleton.data = new float[DataWidth * DataHeight + DataWidth + 1];
+
+        var terrainHeight = 4f;
+
+        for(int y = 0; y < terrainHeight / 2; y++)
+        {
+            for(int x = 0; x < DataWidth; x++)
+            {
+                var height = Mathf.PerlinNoise(x / 5f, 0) * terrainHeight;
+
+                AddValue(x, y, 1 - y / height, true);
+            }
+        }
+    }
 
     public static void CreateBlank()
     {
@@ -103,12 +123,12 @@ public class MarchingSquaresManager : MonoBehaviour
         }
     }
 
-    public static void AddValue(int x, int y, float value)
+    public static void AddValue(int x, int y, float value, bool force = false)
     {
         if (Singleton == null) return;
 
-        if (x < 3 || x > 150 - 3) return;
-        if (y < 3 || y > 150 - 3) return;
+        if ((x < 3 || x > 150 - 3) && !force) return;
+        if ((y < 3 || y > 150 - 3) && !force) return;
 
         var index = x + y * DataWidth;
 
@@ -229,6 +249,12 @@ public class MarchingSquaresManager : MonoBehaviour
 
                 chunks[x + y * numberOfChunks] = chunkController;
             }
+        }
+
+        if(SceneManager.GetActiveScene().buildIndex == 0)
+        {
+            CreateMainMenu();
+            GenerateMeshAndCollisions();
         }
     }
 }

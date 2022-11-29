@@ -2,23 +2,30 @@ using UnityEngine;
 
 public class CollisionsActivator : MonoBehaviour
 {
-    private float lastActivatedCollisions;
-    private Vector3 lastPos;
+    [SerializeField]
+    private Vector3 positionOffset = new Vector3(18,18);
+    [SerializeField]
+    private float levelSceneSize = 36f;
 
+    private float lastActivatedCollisions;
+    
     private void FixedUpdate()
     {
         if(Time.time - lastActivatedCollisions > 0.05f)
         {
-            var pos = (transform.position + new Vector3(18, 18)) / 36f * 150f;
-            var chunkSize = MarchingSquaresManager.ChunkSize;
+            var pos = (transform.position + positionOffset) / levelSceneSize * 150f;
+            var chunkSize = MarchingSquaresManager.ChunkSize / 2;
 
             MarchingSquaresManager.GenerateCollisions(pos.x, pos.y);
+            MarchingSquaresManager.GenerateCollisions(pos.x + chunkSize, pos.y);
+            MarchingSquaresManager.GenerateCollisions(pos.x - chunkSize, pos.y);
+            MarchingSquaresManager.GenerateCollisions(pos.x, pos.y + chunkSize);
+            MarchingSquaresManager.GenerateCollisions(pos.x, pos.y - chunkSize);
 
-            var movementDirection = (pos - lastPos).normalized * chunkSize;
-            
-            MarchingSquaresManager.GenerateCollisions(pos.x + movementDirection.x, pos.y + movementDirection.y);
-
-            lastPos = pos;
+            MarchingSquaresManager.GenerateCollisions(pos.x + chunkSize, pos.y + chunkSize);
+            MarchingSquaresManager.GenerateCollisions(pos.x - chunkSize, pos.y + chunkSize);
+            MarchingSquaresManager.GenerateCollisions(pos.x + chunkSize, pos.y - chunkSize);
+            MarchingSquaresManager.GenerateCollisions(pos.x - chunkSize, pos.y - chunkSize);
         }
     }
 }
