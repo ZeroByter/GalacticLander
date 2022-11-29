@@ -7,6 +7,7 @@ using System.Text;
 using UnityEngine.SceneManagement;
 using Steamworks;
 using System.IO;
+using UnityEngine.UI;
 
 public class VictoryMenuController : MonoBehaviour {
     [Serializable]
@@ -339,9 +340,15 @@ public class VictoryMenuController : MonoBehaviour {
 
                 LevelLoader.SetLevelDirectory(LevelLoader.LevelOrigin.Game, nextLevelName);
             } else {
+                var fileName = Path.GetFileNameWithoutExtension(LevelLoader.GetLevelDirectory());
+
                 string levelPrefix = "sp";
-                if (Path.GetFileNameWithoutExtension(LevelLoader.GetLevelDirectory()).StartsWith("mp")) {
+                if (fileName.StartsWith("mp")) {
                     levelPrefix = "mp";
+                }
+                if(fileName.StartsWith("osp") || fileName.StartsWith("omp"))
+                {
+                    levelPrefix = "o" + levelPrefix;
                 }
 
                 LevelLoader.SetLevelDirectory(LevelLoader.LevelOrigin.Game, levelPrefix + (currentLevelNumber + 1));
@@ -374,6 +381,12 @@ public class VictoryMenuController : MonoBehaviour {
                     statsToBeatBestTimeText.text = $"Best Global Time: <b>{Math.Round(timeData.bestTime, 3)}</b>";
                     statsToBeatBestScoreText.text = $"Best Global Score: <b>{Math.Round(timeData.bestScore, 3)}</b>";
                     showStatsToBeat = true;
+
+                    yield return new WaitForSeconds(0.01f);
+
+                    var layoutGroup = statsToBeatRectTransform.GetComponent<VerticalLayoutGroup>();
+                    layoutGroup.reverseArrangement = true;
+                    layoutGroup.reverseArrangement = false;
                 }
                 else
                 {
