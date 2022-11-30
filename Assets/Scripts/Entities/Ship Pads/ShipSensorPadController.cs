@@ -11,7 +11,7 @@ public class ShipSensorPadController : MonoBehaviour {
     private bool isCaptured = false;
     private bool isCapturing;
     private float lastStartedCapturing;
-    private float maxCapture = 5;
+    private float maxCapture = 2.5f;
 
     private AudioSource selfAudio;
     private LevelObjectHolder objectHolder;
