@@ -189,6 +189,17 @@ public class MarchingSquaresManager : MonoBehaviour
         return Singleton.data;
     }
 
+    private static float GetValue(int x, int y)
+    {
+        if (Singleton == null) return 0;
+
+        var index = x + y * DataWidth;
+
+        if (index < 0 || index > Singleton.data.Length) return 0;
+
+        return Singleton.data[index];
+    }
+
     public static void GenerateMeshAndCollisions()
     {
         if (Singleton == null) return;
@@ -196,6 +207,50 @@ public class MarchingSquaresManager : MonoBehaviour
         foreach (var chunk in Singleton.chunks)
         {
             chunk.GenerateMeshAndCollisions(true, false);
+        }
+    }
+
+    public static void SpaceFightersEasterEgg()
+    {
+        if (Singleton == null) return;
+
+        if (Random.Range(0, 10000) == 0)
+        {
+            var size = 6;
+
+            for(int i = 0; i < 10; i++)
+            {
+                int randomX = Random.Range(0, DataWidth - size);
+                int randomY = Random.Range(0, DataHeight - size);
+
+                var validPosition = true;
+
+                for (int y = 0; y < randomY + size; y++)
+                {
+                    for(int x = 0; x < randomX + size; x++)
+                    {
+                        var value = GetValue(x, y);
+                        if(value < IsoLevel)
+                        {
+                            validPosition = false;
+                            break;
+                        }
+                    }
+
+                    if(!validPosition) break;
+                }
+
+                if (validPosition)
+                {
+                    var worldPosition = new Vector3(randomX / 150f * 36f - 18f, randomY / 150f * 36f - 18f, -5);
+
+                    var tile = Resources.Load<GameObject>("Collision Data/Filled Tile Space Fighters");
+                    tile.AddComponent<SpaceFightersFilledTileController>();
+                    tile.transform.position = worldPosition;
+                    Instantiate(tile);
+                    break;
+                }
+            }
         }
     }
 

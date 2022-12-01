@@ -44,7 +44,7 @@ public class FirstLevelTutorialController : MonoBehaviour {
             middleText.color = new Color(1, 1, 1, Mathf.Lerp(0, 1, Time.timeSinceLevelLoad / 3 - 1.5f));
             bottomText.color = new Color(1, 1, 1, Mathf.Lerp(0, 1, Time.timeSinceLevelLoad / 2 - 3));
 
-            if(levelData != null) {
+            if(levelData != null && PlayerShipController.Singletron != null) {
                 Vector2 launchPosition = levelData.GetLaunchPad().GetPosition();
                 Vector2 landPosition = levelData.GetLandPad().GetPosition();
                 float distanceFromLaunchToLand = Vector2.Distance(launchPosition, Vector2.Lerp(launchPosition, landPosition, 0.5f));

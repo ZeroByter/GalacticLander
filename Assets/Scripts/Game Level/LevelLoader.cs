@@ -267,6 +267,7 @@ public class LevelLoader : MonoBehaviour {
             {
                 MarchingSquaresManager.SetData(levelData.levelMapValues);
                 MarchingSquaresManager.GenerateMeshAndCollisions();
+                MarchingSquaresManager.SpaceFightersEasterEgg();
 
                 if (currentEvent == null)
                 {

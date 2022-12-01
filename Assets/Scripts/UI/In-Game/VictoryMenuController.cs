@@ -77,12 +77,12 @@ public class VictoryMenuController : MonoBehaviour {
 
         if (showStatsToBeat)
         {
-            statsToBeatRectTransform.sizeDelta = new Vector2(Mathf.Lerp(statsToBeatRectTransform.sizeDelta.x, 320, 0.2f), statsToBeatRectTransform.sizeDelta.y);
+            statsToBeatRectTransform.sizeDelta = new Vector2(320, statsToBeatRectTransform.sizeDelta.y);
             statsToBeatLerpCanvasGroup.target = 1;
         }
         else
         {
-            statsToBeatRectTransform.sizeDelta = new Vector2(Mathf.Lerp(statsToBeatRectTransform.sizeDelta.x, 0, 0.2f), statsToBeatRectTransform.sizeDelta.y);
+            statsToBeatRectTransform.sizeDelta = new Vector2(0, statsToBeatRectTransform.sizeDelta.y);
             statsToBeatLerpCanvasGroup.target = 0;
         }
     }
@@ -382,11 +382,12 @@ public class VictoryMenuController : MonoBehaviour {
                     statsToBeatBestScoreText.text = $"Best Global Score: <b>{Math.Round(timeData.bestScore, 3)}</b>";
                     showStatsToBeat = true;
 
-                    yield return new WaitForSeconds(0.01f);
+                    statsToBeatRectTransform.sizeDelta = new Vector2(320, statsToBeatRectTransform.sizeDelta.y);
+                    statsToBeatLerpCanvasGroup.target = 1;
 
-                    var layoutGroup = statsToBeatRectTransform.GetComponent<VerticalLayoutGroup>();
-                    layoutGroup.reverseArrangement = true;
-                    layoutGroup.reverseArrangement = false;
+                    //yield return new WaitForSeconds(0.1f);
+
+                    //LayoutRebuilder.ForceRebuildLayoutImmediate(statsToBeatRectTransform);
                 }
                 else
                 {
