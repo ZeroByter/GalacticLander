@@ -3,6 +3,7 @@ using SourceConsole;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class CrateController : MonoBehaviour
 {
@@ -69,7 +70,7 @@ public class CrateController : MonoBehaviour
 
     private void Start()
     {
-        ghostReplayId = GhostReplayRecorder.Singleton.GetCurrentGhostReplay().GetNewGhostReplayId();
+        if(SceneManager.GetActiveScene().name != "Trailer") ghostReplayId = GhostReplayRecorder.Singleton.GetCurrentGhostReplay().GetNewGhostReplayId();
     }
 
     private void OnEnable()
