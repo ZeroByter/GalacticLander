@@ -526,7 +526,9 @@ public class LevelEditorSaveMenu : MonoBehaviour {
 
     private void HandleSaveLevelInputChange(string newValue)
     {
-        if(SavedLevelItemController.Controllers.TryGetValue(newValue, out var controller))
+        saveNewLevelName = newValue;
+
+        if (SavedLevelItemController.Controllers.TryGetValue(newValue, out var controller))
         {
             if(controller != null) controller.TriggerSelectLevel();
         }
