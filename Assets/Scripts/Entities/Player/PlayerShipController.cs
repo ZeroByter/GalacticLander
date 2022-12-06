@@ -87,6 +87,9 @@ public class PlayerShipController : MonoBehaviour {
     public bool hasExploded = false;
 
     [HideInInspector]
+    public float lastInteractedWithCrates = 0f;
+
+    [HideInInspector]
     public Rigidbody2D selfRigidbody;
     [HideInInspector]
     public NetworkObject networkObject;

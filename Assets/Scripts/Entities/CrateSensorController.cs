@@ -84,7 +84,7 @@ public class CrateSensorController : MonoBehaviour {
     {
         if (objectHolder != null)
         {
-            if (!objectHolder.levelEntity.isLogicActivated)
+            if (!objectHolder.levelEntity.isLogicActivated && objectHolder.levelEntity.logicTarget != null)
             {
                 selfAudio.Play();
                 objectHolder.levelEntity.ActivateLogic();

@@ -50,7 +50,7 @@ public class ShipSensorPadController : MonoBehaviour {
                 if (selfAudio.pitch < 0.01) selfAudio.pitch = 0;
                 if (selfAudio.pitch > 1.99) selfAudio.pitch = 2;
             } else {
-                selfAudio.volume = Mathf.Lerp(selfAudio.volume, 0, 0.04f);
+                selfAudio.volume = Mathf.Lerp(selfAudio.volume, 0, 1.6f * Time.deltaTime);
 
                 if(selfAudio.volume < 0.03f) {
                     selfAudio.Stop();
@@ -63,6 +63,13 @@ public class ShipSensorPadController : MonoBehaviour {
             }
         } else if (isCaptured) {
             lightsController.progress = 1;
+
+            selfAudio.volume = Mathf.Lerp(selfAudio.volume, 0, 1.6f * Time.deltaTime);
+
+            if (selfAudio.volume < 0.03f)
+            {
+                selfAudio.Stop();
+            }
         } else {
             lightsController.progress -= Time.deltaTime / maxCapture;
 

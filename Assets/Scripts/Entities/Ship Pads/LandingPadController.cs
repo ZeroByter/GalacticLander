@@ -136,7 +136,7 @@ public class LandingPadController : MonoBehaviour {
                     if (selfAudio.pitch > 1.99) selfAudio.pitch = 2;
                 } else {
                     if (VictoryMenuController.Singletron.isOpen) {
-                        selfAudio.volume = Mathf.Lerp(selfAudio.volume, 0, 0.04f);
+                        selfAudio.volume = Mathf.Lerp(selfAudio.volume, 0, 1.6f * Time.deltaTime);
                     }
                 }
             } else {
