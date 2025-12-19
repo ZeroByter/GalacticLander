@@ -567,8 +567,9 @@ public class NetworkingManager : MonoBehaviour {
             if ((int)data[0] == 12)
             {
                 Vector2 pos = new Vector2((float)data[1], (float)data[2]);
+                float angle = (float)data[3];
 
-                InstantiateObject("Player Ships/Player Ship", pos);
+                InstantiateObject("Player Ships/Player Ship", pos, angle);
             }
 
             //crate sensor forcefully attaching a crate to itself in no-gravity mode

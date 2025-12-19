@@ -10,11 +10,11 @@ public class LevelEditorEntityListItem : MonoBehaviour {
 
     private LevelEntity entityData;
 
-    public void Setup(LevelEntity entityData, Sprite sprite) {
+    public void Setup(LevelEntity entityData, Sprite sprite, string displayName) {
         this.entityData = entityData;
         image.sprite = sprite;
         image.preserveAspect = true;
-        itemName.text = sprite.name;
+        itemName.text = displayName;
 
         gameObject.SetActive(true);
     }

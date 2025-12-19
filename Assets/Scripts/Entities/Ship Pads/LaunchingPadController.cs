@@ -11,8 +11,11 @@ public class LaunchingPadController : MonoBehaviour
     [Header("The player ship we need to instantiate")]
     public Transform playerShip;
 
+    private int launchPadIndex = 0;
+
     private void Awake()
     {
+        launchPadIndex = LaunchPads.Count;
         LaunchPads.Add(this);
     }
 
@@ -20,25 +23,27 @@ public class LaunchingPadController : MonoBehaviour
     {
         bool isInLobby = SteamManager.Initialized && NetworkingManager.CurrentLobbyValid;
 
+        var shipPosition = new Vector3(transform.position.x, transform.position.y) + transform.up * 0.56f;
+
         if (isInLobby)
         {
             bool areWeOwner = SteamMatchmaking.GetLobbyOwner((CSteamID)NetworkingManager.CurrentLobby) == SteamUser.GetSteamID();
 
             if (areWeOwner)
             {
-                if (LaunchPads[OwnerLaunchPadIndex] == this)
+                if (launchPadIndex - 1 + OwnerLaunchPadIndex == 0)
                 {
-                    NetworkingManager.InstantiateObject("Player Ships/Player Ship", new Vector2(transform.position.x, transform.position.y + 0.56f));
+                    NetworkingManager.InstantiateObject("Player Ships/Player Ship", shipPosition, transform.eulerAngles.z);
                 }
                 else
                 {
-                    NetworkingManager.SendPacketOtherOnly(new object[] { 12, transform.position.x, transform.position.y + 0.56f }, 1);
+                    NetworkingManager.SendPacketOtherOnly(new object[] { 12, shipPosition.x, shipPosition.y, transform.eulerAngles.z }, 1);
                 }
             }
         }
         else
         {
-            Instantiate(playerShip, new Vector2(transform.position.x, transform.position.y + 0.56f), Quaternion.identity);
+            Instantiate(playerShip, shipPosition, transform.rotation);
         }
     }
 }

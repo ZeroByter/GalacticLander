@@ -105,16 +105,13 @@ public class LevelSelectionController : MonoBehaviour, IPointerEnterHandler {
                 GetWorkshopLevelName(workshopId);
             } else {
                 FileInfo fileInfo = new FileInfo(levelDirectory);
-                if (fileInfo.Exists) {
+                if (fileInfo.Exists)
+                {
                     levelNameText.text = fileInfo.Name.Replace(".level", "");
                     workshopName = "";
-
-                    string previewPath = levelDirectory.Replace(".level", ".png");
-                    if (File.Exists(previewPath)){
-                        StartCoroutine(LoadPreviewFromFile(previewPath));
-                    }
-                    //check if png exists and if yes, create sprite and set it as preview
-                } else {
+                }
+                else
+                {
                     Destroy(gameObject);
                 }
             }
@@ -231,6 +228,19 @@ public class LevelSelectionController : MonoBehaviour, IPointerEnterHandler {
         if (origin == LevelLoader.LevelOrigin.Game) {
             levelSelectionManager.ShowLevelDetails(levelDirPrefix + levelDirectory);
         } else {
+            if (!levelDirectory.StartsWith("workshop:"))
+            {
+                FileInfo fileInfo = new FileInfo(levelDirectory);
+                if (fileInfo.Exists)
+                {
+                    string previewPath = levelDirectory.Replace(".level", ".png");
+                    if (File.Exists(previewPath))
+                    {
+                        StartCoroutine(LoadPreviewFromFile(previewPath));
+                    }
+                }
+            }
+
             levelSelectionManager.ShowLevelDetails(levelDirectory);
         }
     }

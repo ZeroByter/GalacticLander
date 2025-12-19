@@ -3,8 +3,19 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using Steamworks;
+using SourceConsole;
 
 public class CinematicLevelCamera : MonoBehaviour {
+    public static CinematicLevelCamera Singleton;
+
+    [ConCommand]
+    public static void CinematicLevelCamera_TakeScreenshot(bool cinematic)
+    {
+        if (Singleton == null) return;
+
+        Singleton.BeginTakeScreenshot(cinematic);
+    }
+
     public LayerMask everythingMask;
     public LayerMask cinematicMask;
 
@@ -13,6 +24,8 @@ public class CinematicLevelCamera : MonoBehaviour {
     private bool cinematicScreenshot;
 
     private void Awake() {
+        Singleton = this;
+
         screenshotCamera = GetComponent<Camera>();
     }
 

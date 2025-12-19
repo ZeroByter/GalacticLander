@@ -120,7 +120,7 @@ public class SettingsMenuManager : MonoBehaviour {
             if(i == index) {
                 tab.color = Color.white;
             } else {
-                tab.color = new Color(0.9481132f, 0.951237f, 1, 0.6784314f);
+                tab.color = new Color(0.9481132f, 0.951237f, 1, 0.8f);
             }
 
             CanvasGroup panel = panels[i];

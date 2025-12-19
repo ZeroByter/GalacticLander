@@ -61,8 +61,19 @@ public class LevelEditorManager : MonoBehaviour {
 
         mainCamera = Camera.main;
 
+        MarchingSquaresManager.CreateBlank();
+        MarchingSquaresManager.GenerateMeshAndCollisions();
+
+        levelData.levelMapValues = MarchingSquaresManager.GetValues();
+
         //awake is called as soon as the level editor scene is loaded
         if (LevelLoader.PlayTestingLevel) { //so if a level is being playtested, we can check so here
+            var tempLevelDirFilePath = Application.persistentDataPath + "/Level Editor/tempLevelPath.txt";
+            if (File.Exists(tempLevelDirFilePath))
+            {
+                LevelEditorSaveMenu.SetCurrentLevelFileDirectory(File.ReadAllText(tempLevelDirFilePath));
+            }
+
             FileStream levelFile = File.Open(Application.persistentDataPath + "/Level Editor/tempLevel.level", FileMode.Open);
             BinaryFormatter bf = new BinaryFormatter();
             SetLevelData((LevelData)bf.Deserialize(levelFile));
@@ -122,12 +133,12 @@ public class LevelEditorManager : MonoBehaviour {
 
             Vector2 mousePos = MainCameraController.Singletron.selfCamera.ScreenToWorldPoint(Input.mousePosition);
 
-            if (Input.GetMouseButtonDown(1)) {
+            if (Input.GetMouseButtonDown(2)) {
                 draggingStartLevelPosition = mainCamera.transform.position;
                 draggingStartMousePosition = Input.mousePosition;
             }
 
-            if (Input.GetMouseButton(1)) {
+            if (Input.GetMouseButton(2)) {
                 mainCamera.transform.position = new Vector3(0, 0, -30) + (Vector3)(draggingStartLevelPosition + ((Vector2)mainCamera.ScreenToWorldPoint(draggingStartMousePosition) - mousePos));
             }
 
@@ -197,9 +208,20 @@ public class LevelEditorManager : MonoBehaviour {
 
         LevelEditorLinesController.DestroyAllLines();
 
+        if(newData.levelMapValues != null)
+        {
+            MarchingSquaresManager.SetData(newData.levelMapValues);
+        }
+        else
+        {
+            MarchingSquaresManager.SetDataFromOldLevel(newData);
+            Singletron.levelData.levelMapValues = MarchingSquaresManager.GetValues();
+        }
+        MarchingSquaresManager.GenerateMeshAndCollisions();
+
         //Go through all entities and tiles in new loaded `LevelData` and instantiate them inside the level editor
         foreach (LevelObject obj in newData.levelData) {
-            if(obj.GetType() == typeof(LevelTile)) {
+            /*if(obj.GetType() == typeof(LevelTile)) {
                 LevelTile tile = (LevelTile)obj;
 
                 SpriteRenderer newSprite = Instantiate(Singletron.template, Singletron.template.transform.parent);
@@ -215,7 +237,7 @@ public class LevelEditorManager : MonoBehaviour {
 
                 LevelObjectHolder objectHolder = newSprite.gameObject.AddComponent<LevelObjectHolder>();
                 objectHolder.levelTile = tile;
-            }
+            }*/
 
             if(obj.GetType() == typeof(LevelEntity) || obj.isEntity) {
                 LevelEntity entity = (LevelEntity)obj;
@@ -312,6 +334,9 @@ public class LevelEditorManager : MonoBehaviour {
     }
 
     public void PlaytestLevel() {
+        var currentLevelDir = LevelEditorSaveMenu.GetCurrentLevelFileDirectory();
+        if(currentLevelDir != null) File.WriteAllText(Application.persistentDataPath + "/Level Editor/tempLevelPath.txt", currentLevelDir);
+
         string tempLevelPath = Application.persistentDataPath + "/Level Editor/tempLevel.level";
         FileStream file = File.Open(tempLevelPath, FileMode.OpenOrCreate);
         BinaryFormatter bf = new BinaryFormatter();

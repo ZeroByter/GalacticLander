@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class SharedScreenCoopPromptController : MonoBehaviour {
+    private static bool DisplayedPrompt = false;
+
     private Canvas canvas;
     private GraphicRaycaster raycaster;
 
@@ -41,7 +43,8 @@ public class SharedScreenCoopPromptController : MonoBehaviour {
     private void Start() {
         bool openedPrompt = false;
 
-        if (LevelLoader.IsPlayingSharedScreenCoop(true)) {
+        if (LevelLoader.IsPlayingSharedScreenCoop(true) && !DisplayedPrompt) {
+            DisplayedPrompt = true;
             openedPrompt = true;
             OpenPrompt();
         }

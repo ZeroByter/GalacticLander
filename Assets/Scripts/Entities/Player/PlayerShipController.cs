@@ -87,6 +87,9 @@ public class PlayerShipController : MonoBehaviour {
     public bool hasExploded = false;
 
     [HideInInspector]
+    public float lastInteractedWithCrates = 0f;
+
+    [HideInInspector]
     public Rigidbody2D selfRigidbody;
     [HideInInspector]
     public NetworkObject networkObject;
@@ -138,6 +141,11 @@ public class PlayerShipController : MonoBehaviour {
         if (NetworkingManager.CurrentLobbyValid && networkObject != null && networkObject.IsMine() || !NetworkingManager.CurrentLobbyValid) {
             positionsRecorded = new List<PositionRecord>();
         }
+
+        if(SceneManager.GetActiveScene().name == "Trailer")
+        {
+            velocityViewOffsetModifier = 0.1f;
+        }
     }
 
     private void AssignVictoryMenuComponents() {
@@ -148,12 +156,19 @@ public class PlayerShipController : MonoBehaviour {
     }
 
     private void Start() {
-        MainCameraController.AddTarget(this);
-        MainCameraController.ForcePosition();
+        var trailerScene = SceneManager.GetActiveScene().name == "Trailer";
 
-        if (Time.time == 0) return;
+        if (!trailerScene)
+        {
+            MainCameraController.AddTarget(this);
+            MainCameraController.ForcePosition();
+        }
 
-        ghostReplayId = GhostReplayRecorder.Singleton.GetCurrentGhostReplay().GetNewGhostReplayId();
+        if (Time.time == 0 && !trailerScene) return;
+
+        var mainMenuScene = SceneManager.GetActiveScene().buildIndex == 0;
+
+        if (!mainMenuScene && !trailerScene) ghostReplayId = GhostReplayRecorder.Singleton.GetCurrentGhostReplay().GetNewGhostReplayId();
 
         #region Setting the ship's skin
         if (NetworkingManager.CurrentLobbyValid && SceneManager.GetActiveScene().name != "Main Menu") { //we are not in a lobby

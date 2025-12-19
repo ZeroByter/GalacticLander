@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class SpriteRedFlasher : MonoBehaviour {
-    public float flashSpeed = 0.25f;
+    public float flashSpeed = 1f;
     public float flashTime = 1f;
 
     private SpriteRenderer sprite;
@@ -33,7 +33,7 @@ public class SpriteRedFlasher : MonoBehaviour {
             return;
         }
 
-        i += flashSpeed;
+        i += flashSpeed * Time.deltaTime;
 
         float c = (Mathf.Sin(i) + 1) / 2;
         sprite.color = new Color(Mathf.Lerp(1, c, c), 1 - c, 1 - c, 1);

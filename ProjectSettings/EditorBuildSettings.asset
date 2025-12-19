@@ -14,4 +14,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Game Level.unity
     guid: 1009710f7a3925e429952ae660e68147
+  - enabled: 0
+    path: Assets/Scenes/Trailer.unity
+    guid: fde2488927d787c48abfb0c54dfe5844
   m_configObjects: {}

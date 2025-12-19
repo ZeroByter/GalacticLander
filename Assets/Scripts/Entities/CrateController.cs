@@ -3,6 +3,7 @@ using SourceConsole;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class CrateController : MonoBehaviour
 {
@@ -69,7 +70,7 @@ public class CrateController : MonoBehaviour
 
     private void Start()
     {
-        ghostReplayId = GhostReplayRecorder.Singleton.GetCurrentGhostReplay().GetNewGhostReplayId();
+        if (SceneManager.GetActiveScene().name != "Trailer") ghostReplayId = GhostReplayRecorder.Singleton.GetCurrentGhostReplay().GetNewGhostReplayId();
     }
 
     private void OnEnable()
@@ -161,7 +162,7 @@ public class CrateController : MonoBehaviour
 
     private void Update()
     {
-        if(ghostReplayId != -1)
+        if (ghostReplayId != -1)
         {
             if (!isBeingCarried || (isBeingCarried && (carrierShip.networkObject == null || carrierShip.networkObject.IsMine())))
             {
@@ -193,31 +194,33 @@ public class CrateController : MonoBehaviour
 
         if (ship != null && selfRigidbody != null)
         {
-            if (ship.carriedCrate == this)
+            if (Time.time - ship.lastInteractedWithCrates > 0.1f)
             {
-                if (NetworkingManager.CurrentLobbyValid)
+                if (ship.carriedCrate == this)
                 {
-                    NetworkingManager.SendPacket(new object[] { 7, crateId, false, selfRigidbody.position.x, selfRigidbody.position.y, selfRigidbody.velocity.x, selfRigidbody.velocity.y }, 1);
+                    if (NetworkingManager.CurrentLobbyValid)
+                    {
+                        NetworkingManager.SendPacket(new object[] { 7, crateId, false, selfRigidbody.position.x, selfRigidbody.position.y, selfRigidbody.velocity.x, selfRigidbody.velocity.y }, 1);
+                    }
+                    else
+                    {
+                        DetachFromPlayerShip(ship, selfRigidbody.position, selfRigidbody.velocity);
+                    }
+
+                    ship.lastInteractedWithCrates = Time.time;
                 }
                 else
                 {
-                    DetachFromPlayerShip(ship, selfRigidbody.position, selfRigidbody.velocity);
-                }
-            }
-            else
-            {
-                if (Vector2.Distance(transform.position, ship.transform.position) < Constants.DistanceNeededToPickupCrate)
-                {
-                    if (PlayerShipController.CarriedCrate == null && LastPressedEscape.LastPressedEscapeCooldownOver(0.1f))
+                    if (Vector2.Distance(transform.position, ship.transform.position) < Constants.DistanceNeededToPickupCrate && ship.carriedCrate == null)
                     {
-                        LastPressedEscape.SetPressedEscape();
-
                         AttachToPlayerShip(ship);
 
                         if (NetworkingManager.CurrentLobbyValid)
                         {
                             NetworkingManager.SendPacketOtherOnly(new object[] { 7, crateId, true }, 1);
                         }
+
+                        ship.lastInteractedWithCrates = Time.time;
                     }
                 }
             }

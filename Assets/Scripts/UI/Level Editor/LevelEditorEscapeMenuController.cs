@@ -214,34 +214,41 @@ public class LevelEditorEscapeMenuController : MonoBehaviour {
         data.SortTilesList();
         data.SortLines();
 
-        AddCondition("Level must have atleast eight tiles", data.GetTiles().Count >= 8);
+        var offset = new Vector2(18, 18);
 
-        AddCondition("Level must be completely closed off", data.IsLevelInclosed());
-
-        AddCondition("All tiles must be valid", AreAllTilesValid());
-
-        int numberOfLaunchingPads = 0;
-        int numberOfLandingPads = 0;
         bool launchPadsInsideLevel = true;
         bool landingPadsInsideLevel = true;
         foreach (LevelObject obj in data.levelData) {
             if(obj.GetType() == typeof(LevelEntity)) {
                 LevelEntity ent = (LevelEntity)obj;
-                if (ent.resourceName == "Ship Pads/Launch Pad") {
-                    numberOfLaunchingPads++;
-                    if (!data.IsPointInLevel(ent.GetPosition())){
-                        launchPadsInsideLevel = false;
+
+                if (ent.resourceName == "Ship Pads/Launch Pad" || ent.resourceName == "Ship Pads/Land Pad")
+                {
+                    var upDirection = new Vector2(Mathf.Sin((-ent.rotation) * Mathf.Deg2Rad), Mathf.Cos((-ent.rotation) * Mathf.Deg2Rad));
+                    var rightDirection = new Vector2(Mathf.Sin((-ent.rotation + 90) * Mathf.Deg2Rad), Mathf.Cos((-ent.rotation + 90) * Mathf.Deg2Rad));
+
+                    var leftBottomCorner = ent.GetPosition() - rightDirection * 0.725f + upDirection * 0.175f + offset;
+                    var rightBottomCorner = ent.GetPosition() + rightDirection * 0.725f + upDirection * 0.175f + offset;
+                    var leftTopCorner = ent.GetPosition() - rightDirection * 0.725f + upDirection * 0.525f + offset;
+                    var rightTopCorner = ent.GetPosition() + rightDirection * 0.725f + upDirection * 0.525f + offset;
+
+                    if (ent.resourceName == "Ship Pads/Launch Pad")
+                    {
+                        if (data.IsPointInLevelNew(leftBottomCorner) || data.IsPointInLevelNew(rightBottomCorner) || data.IsPointInLevelNew(leftTopCorner) || data.IsPointInLevelNew(rightTopCorner))
+                        {
+                            launchPadsInsideLevel = false;
+                        }
                     }
-                }
-                if (ent.resourceName == "Ship Pads/Land Pad") {
-                    numberOfLandingPads++;
-                    if (!data.IsPointInLevel(ent.GetPosition())){
-                        landingPadsInsideLevel = false;
+                    if (ent.resourceName == "Ship Pads/Land Pad")
+                    {
+                        if (data.IsPointInLevelNew(leftBottomCorner) || data.IsPointInLevelNew(rightBottomCorner) || data.IsPointInLevelNew(leftTopCorner) || data.IsPointInLevelNew(rightTopCorner))
+                        {
+                            landingPadsInsideLevel = false;
+                        }
                     }
                 }
             }
         }
-        AddCondition("Level must contain atleast one launch pad and one landing pad", numberOfLaunchingPads >= 1 && numberOfLandingPads >= 1);
         
         AddCondition("All launch pads must be completely inside the level", launchPadsInsideLevel);
         AddCondition("All land pads must be completely inside the level", landingPadsInsideLevel);
@@ -362,12 +369,15 @@ public class LevelEditorEscapeMenuController : MonoBehaviour {
         SteamUGC.SetItemPreview(currentUpdateHandle, previewPath);
 
         //we count how many launch and land pads are there to know if this is a coop level or not
+        var itemTags = new List<string>();
         int[] padsCount = countPads();
         if (padsCount[0] == 2 && padsCount[1] == 2) {
-            SteamUGC.SetItemTags(currentUpdateHandle, new string[] { "Co-op" }); //if there are two launch pads and two land pads, this is a coop level
+            itemTags.Add("Co-op");
         } else {
-            SteamUGC.SetItemTags(currentUpdateHandle, new string[] { "Singleplayer" }); //otherwise this is a singleplayer level
+            itemTags.Add("Singleplayer");
         }
+        itemTags.Add("New Terrain");
+        SteamUGC.SetItemTags(currentUpdateHandle, itemTags.ToArray()); //otherwise this is a singleplayer level
 
         SteamUGC.SetItemVisibility(currentUpdateHandle, ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPublic);
 

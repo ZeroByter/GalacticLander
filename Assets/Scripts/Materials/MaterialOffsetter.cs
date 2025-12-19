@@ -12,6 +12,6 @@ public class MaterialOffsetter : MonoBehaviour {
     }
 
     private void Update() {
-        selfRenderer.material.mainTextureOffset += offset;
+        selfRenderer.material.mainTextureOffset += offset * Time.deltaTime;
     }
 }

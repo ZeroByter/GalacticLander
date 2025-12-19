@@ -42,7 +42,7 @@ public class DoorController : MonoBehaviour {
     }
 
     private void Update() {
-        float lerpSpeed = 0.1f;
+        float lerpSpeed = 1.5f * Time.deltaTime;
         Transform topTransform = topSlide.transform;
         Transform bottomTransform = bottomSlide.transform;
 

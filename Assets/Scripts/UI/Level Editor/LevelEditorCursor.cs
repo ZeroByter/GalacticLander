@@ -20,6 +20,34 @@ public class LevelEditorCursor : MonoBehaviour {
 
     public static LevelEditorCursor Singletron;
 
+    public static bool IsEraserSelected()
+    {
+        if (Singletron == null) return false;
+
+        return Singletron.eraser;
+    }
+
+    public static void SetEraserSelected(bool selected)
+    {
+        if (Singletron == null) return;
+
+        Singletron.SetEraser(selected);
+    }
+
+    public static void SetBrushHardness(float newValue, float minValue, float maxValue)
+    {
+        if (Singletron == null) return;
+
+        Singletron._SetBrushHardness(newValue, minValue, maxValue);
+    }
+
+    public static void SetBrushSize(float newSize)
+    {
+        if (Singletron == null) return;
+
+        Singletron._SetBrushSize(newSize);
+    }
+
     public SpriteRenderer template;
     public ButtonToggle eraserButtonToggle;
     public ButtonToggle tileRandomizerToggle;
@@ -30,6 +58,7 @@ public class LevelEditorCursor : MonoBehaviour {
     private LayerMask entityLayer;
 
     private LevelEntity firstEntityLogicLinking;
+    private bool holdingDownAlt = false;
 
     private float rotation;
     private bool eraser;
@@ -39,6 +68,11 @@ public class LevelEditorCursor : MonoBehaviour {
 
     private Sprite[] sprites;
     private List<TileFamily> tileFamilies = new List<TileFamily>();
+
+    private float brushHardness = 10f;
+    private float brushSize = 10f;
+
+    private float startedHoldingDownBothQE;
 
     public static bool IsCurrentlyMovingObject()
     {
@@ -106,6 +140,8 @@ public class LevelEditorCursor : MonoBehaviour {
             Vector2 mousePos = MainCameraController.Singletron.selfCamera.ScreenToWorldPoint(Input.mousePosition);
             Vector2 screenPos;
 
+            LevelEditorBrushPreviewController.SetPosition(mousePos);
+
             //cancel editing level when pressing escape
             if ((prefab != null || eraser) && Input.GetKeyDown(KeyCode.Escape) && LastPressedEscape.LastPressedEscapeCooldownOver(0.1f)) {
                 if (prefab != null && movingEntityData != null) {
@@ -114,6 +150,8 @@ public class LevelEditorCursor : MonoBehaviour {
                 SetPrefab(null, null);
                 SetEraser(false);
                 LastPressedEscape.SetPressedEscape();
+
+                UpdateBrushPreviewVisible();
             }
 
             //eraser code
@@ -192,13 +230,21 @@ public class LevelEditorCursor : MonoBehaviour {
                                 prefab = rayHit.transform.gameObject;
                                 movingEntityData = (LevelEntity)@object;
                                 lastMouseClick = Time.time;
+
+                                var existingRotation = movingEntityData.rotation;
+                                if (existingRotation > 180) existingRotation = -(360 - existingRotation);
+                                SetRotation(existingRotation);
                             }
                         }
                     }
+
+                    UpdateBrushPreviewVisible();
                 }
 
                 //if we pressed the left alt key
                 if (Input.GetKeyDown(KeyCode.LeftAlt)) {
+                    holdingDownAlt = true;
+
                     if (prefab != null && movingEntityData != null) {
                         prefab.transform.position = movingEntityData.GetPosition();
                     }
@@ -207,33 +253,58 @@ public class LevelEditorCursor : MonoBehaviour {
                     SetPrefab(null, null);
                     CursorController.AddUser("EditorLinkLogicEntities", CursorUser.Type.EditorLinkLogicEntities);
                     LevelEditorLinesController.DestroyAllLinesWithTarget(transform);
+
+                    UpdateBrushPreviewVisible();
                 }
 
                 //when we let go of the left alt key
                 if (Input.GetKeyUp(KeyCode.LeftAlt)) {
+                    holdingDownAlt = false;
+
                     firstEntityLogicLinking = null;
                     CursorController.RemoveUser("EditorLinkLogicEntities");
                     LevelEditorLinesController.DestroyAllLinesWithTarget(transform);
+
+                    UpdateBrushPreviewVisible();
                 }
 
                 //if we have a prefab currently selected
                 if (prefab != null && movingEntityData != null) {
+                    UpdateBrushPreviewVisible();
+
                     if (movingEntityData.lockedToGrid) {
                         screenPos = new Vector2(Mathf.Round(transform.parent.InverseTransformPoint(mousePos).x + 0.5f) - 0.5f, Mathf.Round(transform.parent.InverseTransformPoint(mousePos).y + 0.5f) - 0.5f);
                     } else {
                         screenPos = new Vector2(transform.parent.InverseTransformPoint(mousePos).x, transform.parent.InverseTransformPoint(mousePos).y);
                     }
 
-                    if (movingEntityData.canAdvancedModify) {
-                        //typical rotation and mirroring things
-                        if (movingEntityData.lockedRotation) {
-                            if (Input.GetKeyDown(KeyCode.Q)) SetRotation(rotation + 90);
-                            if (Input.GetKeyDown(KeyCode.E)) SetRotation(rotation - 90);
-                        } else {
-                            if (Input.GetKey(KeyCode.Q)) SetRotation(rotation + 5);
-                            if (Input.GetKey(KeyCode.E)) SetRotation(rotation - 5);
-                        }
+                    //typical rotation and mirroring things
+                    var holdingDownQ = Input.GetKey(KeyCode.Q);
+                    var holdingDownE = Input.GetKey(KeyCode.E);
 
+                    if (holdingDownQ) SetRotation(rotation + 175 * Time.deltaTime);
+                    if (holdingDownE) SetRotation(rotation - 175 * Time.deltaTime);
+
+                    if(holdingDownQ && holdingDownE)
+                    {
+                        if (startedHoldingDownBothQE == 0) startedHoldingDownBothQE = Time.time;
+                        
+                        if(Time.time - startedHoldingDownBothQE > 0.75f)
+                        {
+                            SetRotation(0);
+                        }
+                    }
+                    else
+                    {
+                        startedHoldingDownBothQE = 0;
+                    }
+
+                    if (!movingEntityData.canAdvancedModify)
+                    {
+                        SetRotation(Mathf.Clamp(rotation, -45, 45));
+                    }
+
+                    if (movingEntityData.canAdvancedModify) {
                         if (Input.GetKeyDown(KeyCode.A)) ToggleEraser();
                     }
 
@@ -269,7 +340,21 @@ public class LevelEditorCursor : MonoBehaviour {
                     if (Input.GetKeyDown(KeyCode.A)) ToggleEraser();
 
                     //here we actually place the new tile
-                    if (Input.GetMouseButton(0) && placeTiles) {
+                    if ((Input.GetMouseButton(0) || Input.GetMouseButton(1)) && placeTiles) {
+                        var inversePoint = transform.parent.InverseTransformPoint(mousePos);
+                        var levelScreenPos = new Vector2(Mathf.InverseLerp(-18, 18, inversePoint.x), Mathf.InverseLerp(-18, 18, inversePoint.y)) * 150f;
+
+                        var offset = brushHardness * Time.deltaTime;
+                        if (!Input.GetMouseButton(1)) offset *= -1f;
+
+                        MarchingSquaresManager.AddValues(levelScreenPos, brushSize, offset);
+                        MarchingSquaresManager.GenerateMeshAndCollisions();
+
+                        LevelData data = LevelEditorManager.GetLevelData();
+
+                        data.levelMapValues = MarchingSquaresManager.GetValues();
+
+                        /*
                         //here we check if we are placing upon a tile, if yes, delete it
                         bool tileRemoved = true;
 
@@ -320,7 +405,10 @@ public class LevelEditorCursor : MonoBehaviour {
                                 RefreshTilesLayout();
                             }
                         }
+                        */
                     }
+
+                    UpdateBrushPreviewVisible();
                 }
 
                 if (Input.GetKey(KeyCode.LeftAlt)) {
@@ -332,9 +420,14 @@ public class LevelEditorCursor : MonoBehaviour {
             }
         }
 
-        if (Input.GetKeyUp(KeyCode.Mouse0) && prefab == null && CursorController.GetUser("EditorLinkLogicEntities") == null) {
+        if ((Input.GetKeyUp(KeyCode.Mouse0) || Input.GetKeyUp(KeyCode.Mouse1)) && prefab == null && CursorController.GetUser("EditorLinkLogicEntities") == null) {
             placeTiles = true;
         }
+    }
+
+    private void UpdateBrushPreviewVisible()
+    {
+        LevelEditorBrushPreviewController.SetVisible(!holdingDownAlt && !eraser && movingEntityData == null && prefab == null);
     }
 
     /// <summary>
@@ -725,9 +818,26 @@ public class LevelEditorCursor : MonoBehaviour {
         } else {
             CursorController.RemoveUser("editorEraser");
         }
+
+        UpdateBrushPreviewVisible();
+        LevelEditorControlsManager.UpdateUI();
     }
 
     public void ToggleEraser() {
         SetEraser(!eraser);
+    }
+
+    private void _SetBrushSize(float newSize)
+    {
+        brushSize = newSize;
+
+        LevelEditorBrushPreviewController.SetSize(newSize * 0.18f + 0.5f);
+    }
+
+    private void _SetBrushHardness(float newValue, float minValue, float maxValue)
+    {
+        brushHardness = newValue;
+
+        LevelEditorBrushPreviewController.SetStrength(Mathf.Lerp(0.3f, 1f, Mathf.InverseLerp(minValue, maxValue, newValue)));
     }
 }

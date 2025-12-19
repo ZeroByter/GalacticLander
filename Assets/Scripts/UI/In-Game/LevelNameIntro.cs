@@ -77,7 +77,7 @@ public class LevelNameIntro : MonoBehaviour {
     private void Update() {
         if (text.text == "") return;
 
-        float lerpSpeed = 0.01f;
+        float lerpSpeed = 1.25f * Time.deltaTime;
 
         text.fontSize = Mathf.Lerp(text.fontSize, 0, lerpSpeed);
         text.color = Color.Lerp(text.color, new Color(1, 1, 1, 0), lerpSpeed);

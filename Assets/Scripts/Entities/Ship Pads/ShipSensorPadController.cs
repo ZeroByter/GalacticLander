@@ -11,7 +11,7 @@ public class ShipSensorPadController : MonoBehaviour {
     private bool isCaptured = false;
     private bool isCapturing;
     private float lastStartedCapturing;
-    private float maxCapture = 5;
+    private float maxCapture = 2.5f;
 
     private AudioSource selfAudio;
     private LevelObjectHolder objectHolder;
@@ -27,7 +27,7 @@ public class ShipSensorPadController : MonoBehaviour {
 
     private void OnCollisionEnter2D(Collision2D collision) {
         if (collision.gameObject.tag == "Player") {
-            isCapturing = collision.transform.position.y > transform.position.y;
+            isCapturing = true;
             lastStartedCapturing = Time.time;
         }
     }
@@ -39,16 +39,18 @@ public class ShipSensorPadController : MonoBehaviour {
     }
 
     private void Update() {
-        if (isCapturing) {
+        if (isCapturing && !isCaptured) {
             float capturingProgress = Time.time - lastStartedCapturing;
             lightsController.progress = capturingProgress / maxCapture;
 
             if (lightsController.progress < 0.95f) {
                 if (!selfAudio.isPlaying) selfAudio.Play();
-                selfAudio.volume = 1;
+                selfAudio.volume = 0.75f;
                 selfAudio.pitch = Mathf.Lerp(0, 2, capturingProgress / maxCapture);
+                if (selfAudio.pitch < 0.01) selfAudio.pitch = 0;
+                if (selfAudio.pitch > 1.99) selfAudio.pitch = 2;
             } else {
-                selfAudio.volume = Mathf.Lerp(selfAudio.volume, 0, 0.04f);
+                selfAudio.volume = Mathf.Lerp(selfAudio.volume, 0, 1.6f * Time.deltaTime);
 
                 if(selfAudio.volume < 0.03f) {
                     selfAudio.Stop();
@@ -61,6 +63,13 @@ public class ShipSensorPadController : MonoBehaviour {
             }
         } else if (isCaptured) {
             lightsController.progress = 1;
+
+            selfAudio.volume = Mathf.Lerp(selfAudio.volume, 0, 1.6f * Time.deltaTime);
+
+            if (selfAudio.volume < 0.03f)
+            {
+                selfAudio.Stop();
+            }
         } else {
             lightsController.progress -= Time.deltaTime / maxCapture;
 

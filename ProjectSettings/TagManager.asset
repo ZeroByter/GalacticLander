@@ -41,12 +41,12 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
   - name: Right Ship Side
     uniqueID: 3300001427
     locked: 0
   - name: Left Ship Side
     uniqueID: 3025064785
-    locked: 0
-  - name: Default
-    uniqueID: 0
     locked: 0

@@ -26,7 +26,7 @@ public class MainMenuManager : MonoBehaviour {
 
         SteamCustomUtils.SetAchievementNames();
 
-        playerShip.position = new Vector3(UnityEngine.Random.Range(12, 30), 10, 0);
+        playerShip.position = new Vector3(Random.Range(20, 130), 10, 0);
         playerShip.GetComponent<Rigidbody2D>().AddForce(Vector2.down * 15, ForceMode2D.Impulse);
 
         UpdateAverageScoreText();
