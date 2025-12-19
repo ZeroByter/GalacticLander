@@ -53,7 +53,7 @@ public class LevelEditorFileDialogController : MonoBehaviour
 
         lerpCanvasGroup.target = 1;
 
-        OpenDirectory(Environment.GetFolderPath(Environment.SpecialFolder.Desktop));
+        OpenDirectory(Application.persistentDataPath + @"/Level Editor/Levels");
     }
 
     public void Hide()
@@ -254,12 +254,12 @@ public class LevelEditorFileDialogController : MonoBehaviour
         
         CreateFolderTemplate(new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.Desktop)), "<sprite=0> Desktop");
 
-        CreateFolderDivider("Drives:");
+        /*CreateFolderDivider("Drives:");
         foreach(var drive in DriveInfo.GetDrives())
         {
             if (!drive.IsReady) continue;
             CreateFolderTemplate(new DirectoryInfo(drive.Name), $"{drive.Name.Replace("/", "")}");
-        }
+        }*/
 
         CreateFolderDivider("Folders:");
         if (directoryInfo.Parent != null)

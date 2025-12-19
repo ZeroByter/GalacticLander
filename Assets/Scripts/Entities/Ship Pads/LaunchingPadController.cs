@@ -11,8 +11,11 @@ public class LaunchingPadController : MonoBehaviour
     [Header("The player ship we need to instantiate")]
     public Transform playerShip;
 
+    private int launchPadIndex = 0;
+
     private void Awake()
     {
+        launchPadIndex = LaunchPads.Count;
         LaunchPads.Add(this);
     }
 
@@ -28,7 +31,7 @@ public class LaunchingPadController : MonoBehaviour
 
             if (areWeOwner)
             {
-                if (LaunchPads[OwnerLaunchPadIndex] == this)
+                if (launchPadIndex - 1 + OwnerLaunchPadIndex == 0)
                 {
                     NetworkingManager.InstantiateObject("Player Ships/Player Ship", shipPosition, transform.eulerAngles.z);
                 }

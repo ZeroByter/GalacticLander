@@ -369,12 +369,15 @@ public class LevelEditorEscapeMenuController : MonoBehaviour {
         SteamUGC.SetItemPreview(currentUpdateHandle, previewPath);
 
         //we count how many launch and land pads are there to know if this is a coop level or not
+        var itemTags = new List<string>();
         int[] padsCount = countPads();
         if (padsCount[0] == 2 && padsCount[1] == 2) {
-            SteamUGC.SetItemTags(currentUpdateHandle, new string[] { "Co-op" }); //if there are two launch pads and two land pads, this is a coop level
+            itemTags.Add("Co-op");
         } else {
-            SteamUGC.SetItemTags(currentUpdateHandle, new string[] { "Singleplayer" }); //otherwise this is a singleplayer level
+            itemTags.Add("Singleplayer");
         }
+        itemTags.Add("New Terrain");
+        SteamUGC.SetItemTags(currentUpdateHandle, itemTags.ToArray()); //otherwise this is a singleplayer level
 
         SteamUGC.SetItemVisibility(currentUpdateHandle, ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPublic);
 

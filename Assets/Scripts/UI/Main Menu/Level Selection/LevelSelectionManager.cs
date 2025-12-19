@@ -76,7 +76,7 @@ public class LevelSelectionManager : MonoBehaviour {
     private void HideLegacyLevelsButtons()
     {
         viewLegacyLevelsButton.SetActive(false);
-        viewDefaultLevelsButton.SetActive(!false);
+        viewDefaultLevelsButton.SetActive(false);
     }
 
     public void ShowDefaultList()
