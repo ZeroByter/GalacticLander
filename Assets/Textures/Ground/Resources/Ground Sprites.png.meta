@@ -159,7 +159,7 @@ TextureImporter:
       213: 21300102
     second: Tall-Tall Corner 2
   externalObjects: {}
-  serializedVersion: 11
+  serializedVersion: 12
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -179,6 +179,8 @@ TextureImporter:
   isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -189,10 +191,10 @@ TextureImporter:
     serializedVersion: 2
     filterMode: 0
     aniso: 1
-    mipBias: -100
+    mipBias: 0
     wrapU: 1
     wrapV: 1
-    wrapW: -1
+    wrapW: 0
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
@@ -210,10 +212,14 @@ TextureImporter:
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
   maxTextureSizeSet: 0
   compressionQualitySet: 0
   textureFormatSet: 0
+  ignorePngGamma: 0
   applyGammaDecoding: 1
+  cookieLightType: 0
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
@@ -237,6 +243,30 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 1
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 1
+  - serializedVersion: 3
+    buildTarget: Server
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 1
+  - serializedVersion: 3
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 1
   spriteSheet:
@@ -1344,6 +1374,59 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      Corner 0: 21300036
+      Corner 1: 21300040
+      Corner 2: 21300042
+      Edge 0: 21300004
+      Edge 1: 21300006
+      Edge 2: 21300018
+      Edge 3: 21300074
+      Edge 4: 21300076
+      Edge 5: 21300078
+      Edge 6: 21300080
+      Filled Tile: 21300082
+      Filled Tile Space Fighters: 21300084
+      Flat Ground 0: 21300000
+      Flat Ground 1: 21300002
+      Flat Ground 2: 21300012
+      Flat Ground 3: 21300020
+      Flat Ground 4: 21300022
+      Flat Ground 5: 21300066
+      Flat Ground 6: 21300068
+      Flat Ground 7: 21300070
+      Flat Ground 8: 21300072
+      Flat To Tall Flat 0: 21300024
+      Flat To Tall Flat 1: 21300026
+      Flat To Tall Flat 2: 21300028
+      Spike 0: 21300008
+      Spike 1: 21300010
+      Spike 2: 21300014
+      Spike 3: 21300016
+      Tall Corner 0: 21300038
+      Tall Corner 1: 21300044
+      Tall Corner 2: 21300046
+      Tall Edge 0: 21300086
+      Tall Edge 1: 21300088
+      Tall Edge 2: 21300090
+      Tall Flat Ground 0: 21300030
+      Tall Flat Ground 1: 21300032
+      Tall Flat Ground 2: 21300034
+      Tall Flat Ground 3: 21300052
+      Tall Flat Ground 4: 21300054
+      Tall Flat Ground 5: 21300048
+      Tall Flat Ground 6: 21300050
+      Tall Flat Ground 7: 21300056
+      Tall Spike 0: 21300058
+      Tall Spike 1: 21300060
+      Tall Spike 2: 21300062
+      Tall Spike 3: 21300064
+      Tall-Tall Corner 0: 21300098
+      Tall-Tall Corner 1: 21300100
+      Tall-Tall Corner 2: 21300102
+      Tall-Tall Edge 0: 21300092
+      Tall-Tall Edge 1: 21300094
+      Tall-Tall Edge 2: 21300096
   spritePackingTag: Tiles
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0
