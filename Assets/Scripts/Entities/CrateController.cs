@@ -146,7 +146,7 @@ public class CrateController : MonoBehaviour
         Destroy(GetComponent<FixedJoint2D>());
 
         selfRigidbody.position = dropoffLocation;
-        selfRigidbody.velocity = dropoffVelocity;
+        selfRigidbody.linearVelocity = dropoffVelocity;
 
         RopeManager.DeleteRopeById(currentRopeId);
         //TODO: replace this by deleting existing rope
@@ -200,11 +200,11 @@ public class CrateController : MonoBehaviour
                 {
                     if (NetworkingManager.CurrentLobbyValid)
                     {
-                        NetworkingManager.SendPacket(new object[] { 7, crateId, false, selfRigidbody.position.x, selfRigidbody.position.y, selfRigidbody.velocity.x, selfRigidbody.velocity.y }, 1);
+                        NetworkingManager.SendPacket(new object[] { 7, crateId, false, selfRigidbody.position.x, selfRigidbody.position.y, selfRigidbody.linearVelocity.x, selfRigidbody.linearVelocity.y }, 1);
                     }
                     else
                     {
-                        DetachFromPlayerShip(ship, selfRigidbody.position, selfRigidbody.velocity);
+                        DetachFromPlayerShip(ship, selfRigidbody.position, selfRigidbody.linearVelocity);
                     }
 
                     ship.lastInteractedWithCrates = Time.time;

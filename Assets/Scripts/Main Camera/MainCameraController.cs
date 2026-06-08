@@ -204,7 +204,7 @@ public class MainCameraController : MonoBehaviour {
     }
 
     private Vector3 GetVelocityOffset(Rigidbody2D rigidbody, float modifier) {
-        return new Vector3(rigidbody.velocity.x * modifier, rigidbody.velocity.y * modifier, 0);
+        return new Vector3(rigidbody.linearVelocity.x * modifier, rigidbody.linearVelocity.y * modifier, 0);
     }
 
     private float GetRequiredSize() {

@@ -563,7 +563,7 @@ public class PlayerShipController : MonoBehaviour {
 
             var explosionDirection = (rigidbody.position - otherRigidbody.position).normalized * 2.5f;
 
-            rigidbody.velocity = selfRigidbody.velocity + (Vector2)explosionDirection;
+            rigidbody.linearVelocity = selfRigidbody.linearVelocity + (Vector2)explosionDirection;
             rigidbody.angularVelocity = selfRigidbody.angularVelocity;
 
             var spriteRenderer = rigidbody.GetComponent<SpriteRenderer>();

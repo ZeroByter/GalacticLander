@@ -53,7 +53,7 @@ public class TrailerManager : MonoBehaviour
                 for(int i = 0; i < spawns.Length; i++)
                 {
                     GameObject newCrate = Instantiate(Resources.Load<GameObject>("Crate/Crate"), spawns[i], Quaternion.Euler(0, 0, rotations[i]));
-                    newCrate.GetComponent<Rigidbody2D>().velocity = new Vector2(0, -1f);
+                    newCrate.GetComponent<Rigidbody2D>().linearVelocity = new Vector2(0, -1f);
                 }
             }
 

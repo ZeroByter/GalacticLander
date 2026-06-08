@@ -252,7 +252,7 @@ public class EngineController : ShipComponentController {
             }
             else if (thrustDirection == ThrustDirection.MainMenuAuto)
             {
-                enableParticleEmissions = parentRigidbody.position.y < 5.5f && parentRigidbody.velocity.magnitude > 0.6f;
+                enableParticleEmissions = parentRigidbody.position.y < 5.5f && parentRigidbody.linearVelocity.magnitude > 0.6f;
                 if (enableParticleEmissions)
                 {
                     parentRigidbody.AddForce(transform.up * thrustForce * thrustModifier);
