@@ -1,24 +1,32 @@
 ﻿using UnityEngine;
 
-public class FirstMovementTimer : MonoBehaviour {
+public class FirstMovementTimer : MonoBehaviour
+{
     private static float FirstMovementTime = 0;
 
-    public static float GetFirstMovementTime() {
+    public static float GetFirstMovementTime()
+    {
         return FirstMovementTime;
     }
 
-    public static float GetTimeSinceFirstMovement() {
+    public static float GetTimeSinceFirstMovement()
+    {
+        if (FirstMovementTime == 0) return 0;
+
         return Time.time - FirstMovementTime;
     }
 
-    private void Awake() {
+    private void Awake()
+    {
         FirstMovementTime = 0;
     }
 
-    private void Update() {
-        bool isPressingMovementButtons = Input.GetButtonDown("Left") || Input.GetButtonDown("Right") || Input.GetButtonDown("Vertical");
+    private void Update()
+    {
+        bool isPressingMovementButtons = Input.GetButton("Left") || Input.GetButton("Right") || Input.GetButton("Vertical");
 
-        if (isPressingMovementButtons && FirstMovementTime == 0 && !SourceConsole.UI.ConsoleCanvasController.IsVisible()) {
+        if (isPressingMovementButtons && FirstMovementTime == 0 && !SourceConsole.UI.ConsoleCanvasController.IsVisible())
+        {
             FirstMovementTime = Time.time;
             SourceConsole.SourceConsole.print("Set first movement time as " + FirstMovementTime);
         }
