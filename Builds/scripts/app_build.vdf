@@ -1,0 +1,14 @@
+"appbuild"
+{
+    "appid"        "913600"
+    "desc"         "Automated upload"
+    "buildoutput"  "../build_output"
+    "contentroot"  "../galacticlander"
+
+    // "setlive"      "public"   // THIS pushes to main branch
+
+    "depots"
+    {
+        "913601" "depot_build.vdf"
+    }
+}

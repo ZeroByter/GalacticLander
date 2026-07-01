@@ -1,0 +1,14 @@
+"DepotBuildConfig"
+{
+    "DepotID" "913601"
+
+    "FileMapping"
+    {
+        "LocalPath" "*"
+        "DepotPath" "."
+        "recursive" "1"
+    }
+
+    "FileExclusion" "*_BurstDebugInformation_DoNotShip"
+    "FileExclusion" "*_BackUpThisFolder_ButDontShipItWithYourGame"
+}
