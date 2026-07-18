@@ -7,7 +7,8 @@ using UnityEngine.SceneManagement;
 using SourceConsole;
 using System.Text;
 
-public class LevelEditorTutorialManager : MonoBehaviour {
+public class LevelEditorTutorialManager : MonoBehaviour
+{
     private static LevelEditorTutorialManager Singleton;
 
     public static void StartTutorial()
@@ -51,7 +52,8 @@ public class LevelEditorTutorialManager : MonoBehaviour {
     private bool enableTutorial = false;
 
     [ConVar]
-    public static int LevelEditorTutorial_Stage {
+    public static int LevelEditorTutorial_Stage
+    {
         get
         {
             if (Singleton == null) return -1;
@@ -1109,10 +1111,10 @@ public class LevelEditorTutorialManager : MonoBehaviour {
         var values = MarchingSquaresManager.GetValues();
         for (int y = 0; y < 150; y++)
         {
-            for(int x = 0; x < 150; x++)
+            for (int x = 0; x < 150; x++)
             {
                 var value = values[x + y * MarchingSquaresManager.DataWidth];
-                if(value < 0.5)
+                if (value < 0.5)
                 {
                     output.Append($"({x},{y});");
                 }
@@ -1132,7 +1134,7 @@ public class LevelEditorTutorialManager : MonoBehaviour {
         Debug.Log(Singleton.tutorialEmptyPositions.Length);
 
         var offset = new Vector2(18, 18);
-        foreach(var point in Singleton.tutorialEmptyPositions)
+        foreach (var point in Singleton.tutorialEmptyPositions)
         {
             var fixedPoint = point / 150f * 36 - offset;
 
@@ -1177,7 +1179,7 @@ public class LevelEditorTutorialManager : MonoBehaviour {
         UpdateTutorialText();
         enableTutorial = true;
 
-        foreach(var p in tutorialEmptyPositions)
+        foreach (var p in tutorialEmptyPositions)
         {
             var marker = Instantiate(terrainGuideTemplate);
             marker.transform.parent = terrainGuidesParent.transform;
@@ -1209,9 +1211,9 @@ public class LevelEditorTutorialManager : MonoBehaviour {
     {
         if (Singleton == null) return;
 
-        if(Singleton.tutorialStage == 2)
+        if (Singleton.enableTutorial)
         {
-            ShowTutorialText("Well, anything you want to delete EXCEPT the land or launch pads... We still need those! (Click to continue)");
+            ShowTutorialText("Hey! Don't delete either the landing or launch pads! We still need those! (Click to continue)");
             SteamCustomUtils.SetLevelEditorAchievement("DONT_DELETE_THAT");
         }
     }
@@ -1333,7 +1335,7 @@ public class LevelEditorTutorialManager : MonoBehaviour {
 
     private bool DoesTutorialLevelMatchGuide()
     {
-        foreach(var p in tutorialEmptyPositions)
+        foreach (var p in tutorialEmptyPositions)
         {
             if (LevelEditorManager.GetLevelData().IsPointInLevelNew(p / 150 * 36f)) return false;
         }
