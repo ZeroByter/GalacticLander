@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MainCameraController : MonoBehaviour {
+public class MainCameraController : MonoBehaviour
+{
     private class CameraTarget
     {
         public float timeAdded;
@@ -16,7 +17,7 @@ public class MainCameraController : MonoBehaviour {
 
         public override bool Equals(object obj)
         {
-            if(obj is CameraTarget)
+            if (obj is CameraTarget)
             {
                 CameraTarget otherTarget = (CameraTarget)obj;
                 return controller == otherTarget.controller;
@@ -48,7 +49,7 @@ public class MainCameraController : MonoBehaviour {
     private float lastShake = 0;
     private float shakeDuration = 0.5f;
     private float shakeMagnitude = 2;
-    private Vector3 lastPosition = new Vector3(0,0,-30);
+    private Vector3 lastPosition = new Vector3(0, 0, -30);
 
     private List<CameraTarget> cameraTargets = new List<CameraTarget>();
     private List<Transform> nonPlayerTargets = new List<Transform>();
@@ -86,7 +87,8 @@ public class MainCameraController : MonoBehaviour {
         minSize = defaultMinSize;
     }
 
-    private void Awake() {
+    private void Awake()
+    {
         Singletron = this;
         selfCamera = GetComponent<Camera>();
 
@@ -97,23 +99,29 @@ public class MainCameraController : MonoBehaviour {
         }
     }
 
-    private void Update() {
+    private void Update()
+    {
         /*if(SceneManager.GetActiveScene().name == "Main Menu" && Input.GetKeyDown(KeyCode.Slash)) {
             StartShake(1.5f, 0.5f);
         }*/
     }
 
-    private void FixedUpdate() {
-        if (GetTargetsCount() > 0) {
+    private void FixedUpdate()
+    {
+        if (GetTargetsCount() > 0)
+        {
             lastPosition = transform.position;
             selfCamera.orthographicSize = Mathf.SmoothDamp(selfCamera.orthographicSize, GetRequiredSize(), ref zoomSpeed, dampTime);
             transform.position = Vector3.SmoothDamp(transform.position, GetAveragePosition(), ref moveSpeed, dampTime) + GetShakePosition();
-        } else {
+        }
+        else
+        {
             transform.position = lastPosition + GetShakePosition();
         }
     }
 
-    public static void AddTarget(PlayerShipController target) {
+    public static void AddTarget(PlayerShipController target)
+    {
         if (Singletron == null) return;
 
         CameraTarget newTarget = new CameraTarget(target);
@@ -122,7 +130,8 @@ public class MainCameraController : MonoBehaviour {
         Singletron.cameraTargets.Add(newTarget);
     }
 
-    public static void RemoveTarget(PlayerShipController target) {
+    public static void RemoveTarget(PlayerShipController target)
+    {
         Singletron.cameraTargets.RemoveAll(x => x.controller == target);
     }
 
@@ -139,10 +148,11 @@ public class MainCameraController : MonoBehaviour {
         Singletron.nonPlayerTargets.Remove(target);
     }
 
-    public static int GetTargetsCount() {
+    public static int GetTargetsCount()
+    {
         int count = Singletron.nonPlayerTargets.Count;
 
-        foreach(CameraTarget target in Singletron.cameraTargets)
+        foreach (CameraTarget target in Singletron.cameraTargets)
         {
             if (!target.controller.IsMine() && Time.time - target.timeAdded < 0.025f) continue;
 
@@ -164,7 +174,8 @@ public class MainCameraController : MonoBehaviour {
         Singletron.selfCamera.orthographicSize = Singletron.GetRequiredSize();
     }
 
-    public static void StartShake(float magnitude, float duration) {
+    public static void StartShake(float magnitude, float duration)
+    {
         Singletron.shakeMagnitude = magnitude;
         Singletron.shakeDuration = duration;
         Singletron.lastShake = Time.time;
@@ -172,20 +183,23 @@ public class MainCameraController : MonoBehaviour {
         print(string.Format("mag = {0} - dur = {1} - time = {2}", magnitude, duration, Time.time));
     }
 
-    private Vector3 GetShakePosition() {
+    private Vector3 GetShakePosition()
+    {
         if (lastShake == 0) return Vector3.zero;
 
         return Random.insideUnitCircle * Mathf.Lerp(shakeMagnitude, 0, (Time.time - lastShake) / shakeDuration);
     }
 
-    private Vector3 GetAveragePosition() {
+    private Vector3 GetAveragePosition()
+    {
         var targetsCount = GetTargetsCount();
-        if (targetsCount == 0) return new Vector3(0,0,-30);
+        if (targetsCount == 0) return new Vector3(0, 0, -30);
 
         float x = 0;
         float y = 0;
 
-        foreach(CameraTarget target in cameraTargets) {
+        foreach (CameraTarget target in cameraTargets)
+        {
             if (!target.controller.IsMine() && Time.time - target.timeAdded < 0.2f) continue;
 
             Vector3 velocityOffset = GetVelocityOffset(target.controller.selfRigidbody, target.controller.velocityViewOffsetModifier);
@@ -203,11 +217,13 @@ public class MainCameraController : MonoBehaviour {
         return new Vector3(x / targetsCount, y / targetsCount, -30);
     }
 
-    private Vector3 GetVelocityOffset(Rigidbody2D rigidbody, float modifier) {
+    private Vector3 GetVelocityOffset(Rigidbody2D rigidbody, float modifier)
+    {
         return new Vector3(rigidbody.linearVelocity.x * modifier, rigidbody.linearVelocity.y * modifier, 0);
     }
 
-    private float GetRequiredSize() {
+    private float GetRequiredSize()
+    {
         Vector3 desiredLocalPos = transform.InverseTransformPoint(GetAveragePosition());
 
         float size = 0;

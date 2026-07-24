@@ -51,6 +51,8 @@ public class LevelEditorTutorialManager : MonoBehaviour
     private int tutorialStage = 0;
     private bool enableTutorial = false;
 
+    private Image nextStageButtonImage;
+
     [ConVar]
     public static int LevelEditorTutorial_Stage
     {
@@ -1149,6 +1151,8 @@ public class LevelEditorTutorialManager : MonoBehaviour
     {
         Singleton = this;
 
+        nextStageButtonImage = nextStageButton.GetComponent<Image>();
+
         tutorialTextCanvasGroup.ForceAlpha(0);
 
         terrainGuidesParent = new GameObject("Terrain Guide Parent");
@@ -1161,10 +1165,15 @@ public class LevelEditorTutorialManager : MonoBehaviour
         doorHalo.SetActive(false);
         crateHalo.SetActive(false);
 
-
-        nextStageButton.interactable = false;
+        SetNextStageButtonInteractable(false);
 
         rect = rectTransform.rect;
+    }
+
+    private void SetNextStageButtonInteractable(bool interactable)
+    {
+        nextStageButton.interactable = interactable;
+        nextStageButtonImage.raycastTarget = interactable;
     }
 
     private void Start()
@@ -1215,6 +1224,7 @@ public class LevelEditorTutorialManager : MonoBehaviour
         {
             ShowTutorialText("Hey! Don't delete either the landing or launch pads! We still need those! (Click to continue)");
             SteamCustomUtils.SetLevelEditorAchievement("DONT_DELETE_THAT");
+            Singleton.SetNextStageButtonInteractable(true);
         }
     }
 
@@ -1279,7 +1289,7 @@ public class LevelEditorTutorialManager : MonoBehaviour
                 ShowTutorialText("Huh? Who placed that crate above the launch pad? That seems like a terrible idea! In order to delete it, either select 'eraser' from the center bottom panel, or press 'A' to select the eraser, and delete the crate");
                 break;
             case 7:
-                nextStageButton.interactable = true;
+                SetNextStageButtonInteractable(true);
                 shouldFollowWorktablePosition = false;
                 ShowTutorialText("All done! If the level is enough to your liking, save your level by pressing 'CTRL+S', press 'escape' and click the 'playtest' button at the top of the screen!");
                 break;
@@ -1287,7 +1297,7 @@ public class LevelEditorTutorialManager : MonoBehaviour
                 ShowTutorialText("That's it... There is nothing else here...");
                 break;
             default:
-                nextStageButton.interactable = true;
+                SetNextStageButtonInteractable(true);
                 tutorialStage++;
                 break;
         }
@@ -1430,11 +1440,10 @@ public class LevelEditorTutorialManager : MonoBehaviour
         }
     }
 
-    public void MoveToNextStage()
+    public void OnTutorialPanelNextStageClick()
     {
-        tutorialStage++;
-
-        nextStageButton.interactable = false;
+        UpdateTutorialText();
+        SetNextStageButtonInteractable(false);
     }
 
     private void Update()

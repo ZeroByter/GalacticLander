@@ -6,7 +6,8 @@ using TMPro;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
-public class LevelEditorManager : MonoBehaviour {
+public class LevelEditorManager : MonoBehaviour
+{
     public static LevelEditorManager Singletron;
 
     public static bool LaunchTutorial;
@@ -20,7 +21,7 @@ public class LevelEditorManager : MonoBehaviour {
 
     [Header("Theme prompt controller")]
     public LevelEditorThemePromptController themePromptController;
-    
+
     [Header("The load editor prompt menu")]
     public CanvasBlurTransition loadEditorMenu;
 
@@ -47,8 +48,20 @@ public class LevelEditorManager : MonoBehaviour {
 
     private Camera mainCamera;
 
-    private void Awake() {
-        if(Time.time == 0f) {
+    public static bool IsCameraPanningInputActive()
+    {
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            return false;
+        }
+
+        return Input.GetMouseButton(2) || (Input.GetKey(KeyCode.Space) && Input.GetMouseButton(0));
+    }
+
+    private void Awake()
+    {
+        if (Time.time == 0f)
+        {
             SceneManager.LoadScene("Main Menu");
             return;
         }
@@ -67,7 +80,8 @@ public class LevelEditorManager : MonoBehaviour {
         levelData.levelMapValues = MarchingSquaresManager.GetValues();
 
         //awake is called as soon as the level editor scene is loaded
-        if (LevelLoader.PlayTestingLevel) { //so if a level is being playtested, we can check so here
+        if (LevelLoader.PlayTestingLevel)
+        { //so if a level is being playtested, we can check so here
             var tempLevelDirFilePath = Application.persistentDataPath + "/Level Editor/tempLevelPath.txt";
             if (File.Exists(tempLevelDirFilePath))
             {
@@ -99,12 +113,16 @@ public class LevelEditorManager : MonoBehaviour {
         }
     }
 
-    private void Update() {
-        if (!EventSystem.current.IsPointerOverGameObject()) {
-            if (Input.GetKeyDown(KeyCode.RightShift)) {
+    private void Update()
+    {
+        if (!EventSystem.current.IsPointerOverGameObject())
+        {
+            if (Input.GetKeyDown(KeyCode.RightShift))
+            {
                 int edgeOffset = 3;
                 levelData.GetTiles();
-                if(levelData.GetTiles().Count > 7) {
+                if (levelData.GetTiles().Count > 7)
+                {
                     levelData.SortLines();
 
                     levelData.InvalidateBounds();
@@ -113,11 +131,14 @@ public class LevelEditorManager : MonoBehaviour {
                     Vector2 corner1 = expandedBounds.min;
                     Vector2 corner2 = expandedBounds.max;
 
-                    for (float x = Mathf.Min(corner1.x, corner2.x); x <= Mathf.Max(corner1.x, corner2.x); x += 1) {
-                        for (float y = Mathf.Min(corner1.y, corner2.y); y <= Mathf.Max(corner1.y, corner2.y); y += 1) {
+                    for (float x = Mathf.Min(corner1.x, corner2.x); x <= Mathf.Max(corner1.x, corner2.x); x += 1)
+                    {
+                        for (float y = Mathf.Min(corner1.y, corner2.y); y <= Mathf.Max(corner1.y, corner2.y); y += 1)
+                        {
                             Vector2 point = new Vector2(x, y);
 
-                            if (!levelData.IsPointInLevel(point)) {
+                            if (!levelData.IsPointInLevel(point))
+                            {
                                 GameObject newTempTile = Instantiate(tempOutsideFilledTile, point, Quaternion.identity);
                                 newTempTile.SetActive(true);
                             }
@@ -125,20 +146,27 @@ public class LevelEditorManager : MonoBehaviour {
                     }
                 }
             }
-            if (Input.GetKeyUp(KeyCode.RightShift)) {
-                foreach(GameObject go in GameObject.FindGameObjectsWithTag("TempOutsideTile")) {
+            if (Input.GetKeyUp(KeyCode.RightShift))
+            {
+                foreach (GameObject go in GameObject.FindGameObjectsWithTag("TempOutsideTile"))
+                {
                     Destroy(go);
                 }
             }
 
             Vector2 mousePos = MainCameraController.Singletron.selfCamera.ScreenToWorldPoint(Input.mousePosition);
 
-            if (Input.GetMouseButtonDown(2)) {
+            bool startedMiddleMousePan = Input.GetMouseButtonDown(2);
+            bool startedSpacePan = Input.GetKey(KeyCode.Space) && Input.GetMouseButtonDown(0);
+
+            if (startedMiddleMousePan || startedSpacePan)
+            {
                 draggingStartLevelPosition = mainCamera.transform.position;
                 draggingStartMousePosition = Input.mousePosition;
             }
 
-            if (Input.GetMouseButton(2)) {
+            if (IsCameraPanningInputActive())
+            {
                 mainCamera.transform.position = new Vector3(0, 0, -30) + (Vector3)(draggingStartLevelPosition + ((Vector2)mainCamera.ScreenToWorldPoint(draggingStartMousePosition) - mousePos));
             }
 
@@ -154,9 +182,12 @@ public class LevelEditorManager : MonoBehaviour {
 
             //detecting when to zoom the map
             float mouseScrollwheel = Input.GetAxis("Mouse ScrollWheel");
-            if (mouseScrollwheel > 0) {
+            if (mouseScrollwheel > 0)
+            {
                 targetSize -= 0.1f;
-            } else if (mouseScrollwheel < 0) {
+            }
+            else if (mouseScrollwheel < 0)
+            {
                 targetSize += 0.1f;
             }
 
@@ -170,35 +201,44 @@ public class LevelEditorManager : MonoBehaviour {
         }
     }
 
-    public static LevelData GetLevelData() {
+    public static LevelData GetLevelData()
+    {
         if (Singletron == null) return null;
         return Singletron.levelData;
     }
 
-    private static Sprite GetSpriteFromSprites(Sprite[] sprites, string target) {
-        foreach(Sprite sprite in sprites) {
+    private static Sprite GetSpriteFromSprites(Sprite[] sprites, string target)
+    {
+        foreach (Sprite sprite in sprites)
+        {
             if (sprite.name == target) return sprite;
         }
         return null;
     }
 
-    public static void SetLevelData(LevelData newData) {
+    public static void SetLevelData(LevelData newData)
+    {
         if (Singletron == null) return;
         Singletron.levelData = newData;
 
-        if (newData.useCustomTilesColor) {
+        if (newData.useCustomTilesColor)
+        {
             Singletron.themePromptController.Setup(newData.backgroundMistSize, newData.tilesColor);
-        } else {
+        }
+        else
+        {
             Singletron.themePromptController.Setup(1.5f, new Color32(45, 45, 45, 255));
         }
 
         Singletron.toggleCoopText.text = newData.IsCoopLevel() ? "Change To Singleplayer" : "Change To Coop";
 
         //First we delete all old tiles/entities
-        foreach (GameObject oldTile in GameObject.FindGameObjectsWithTag("Level")) {
+        foreach (GameObject oldTile in GameObject.FindGameObjectsWithTag("Level"))
+        {
             Destroy(oldTile);
         }
-        foreach (GameObject oldEntity in GameObject.FindGameObjectsWithTag("Entity")) {
+        foreach (GameObject oldEntity in GameObject.FindGameObjectsWithTag("Entity"))
+        {
             Destroy(oldEntity);
         }
 
@@ -208,7 +248,7 @@ public class LevelEditorManager : MonoBehaviour {
 
         LevelEditorLinesController.DestroyAllLines();
 
-        if(newData.levelMapValues != null)
+        if (newData.levelMapValues != null)
         {
             MarchingSquaresManager.SetData(newData.levelMapValues);
         }
@@ -220,7 +260,8 @@ public class LevelEditorManager : MonoBehaviour {
         MarchingSquaresManager.GenerateMeshAndCollisions();
 
         //Go through all entities and tiles in new loaded `LevelData` and instantiate them inside the level editor
-        foreach (LevelObject obj in newData.levelData) {
+        foreach (LevelObject obj in newData.levelData)
+        {
             /*if(obj.GetType() == typeof(LevelTile)) {
                 LevelTile tile = (LevelTile)obj;
 
@@ -239,7 +280,8 @@ public class LevelEditorManager : MonoBehaviour {
                 objectHolder.levelTile = tile;
             }*/
 
-            if(obj.GetType() == typeof(LevelEntity) || obj.isEntity) {
+            if (obj.GetType() == typeof(LevelEntity) || obj.isEntity)
+            {
                 LevelEntity entity = (LevelEntity)obj;
 
                 entity.isEntity = true;
@@ -259,19 +301,30 @@ public class LevelEditorManager : MonoBehaviour {
 
                 spawnedEntities.Add(entity, newSprite.gameObject);
 
-                if (entity.isLogicEntity) {
-                    if (entity.isLogicActivator) {
-                        if (entity.logicTarget != null) {
-                            if (spawnedEntities.ContainsKey(entity.logicTarget)) { //if we already spawned the logic target entity...
+                if (entity.isLogicEntity)
+                {
+                    if (entity.isLogicActivator)
+                    {
+                        if (entity.logicTarget != null)
+                        {
+                            if (spawnedEntities.ContainsKey(entity.logicTarget))
+                            { //if we already spawned the logic target entity...
                                 LevelEditorLinesController.CreateOrEditLine(newSprite.transform, spawnedEntities[entity.logicTarget].transform); //then we find the transform of the gameobject of the logic target we are trying to connect a graphical line with
-                            } else {
+                            }
+                            else
+                            {
                                 logicEntitiesToConnect.Add(newSprite.transform, entity.logicTarget);
                             }
                         }
-                    } else {
-                        if (logicEntitiesToConnect.ContainsValue(entity)) {
-                            foreach(KeyValuePair<Transform, LevelObject> pair in logicEntitiesToConnect) {
-                                if(pair.Value == entity) {
+                    }
+                    else
+                    {
+                        if (logicEntitiesToConnect.ContainsValue(entity))
+                        {
+                            foreach (KeyValuePair<Transform, LevelObject> pair in logicEntitiesToConnect)
+                            {
+                                if (pair.Value == entity)
+                                {
                                     LevelEditorLinesController.CreateOrEditLine(pair.Key, newSprite.transform); //we create a graphical line from the transform of the gameobject of the source activator logic entity to this target logic entity
                                 }
                             }
@@ -282,7 +335,8 @@ public class LevelEditorManager : MonoBehaviour {
         }
     }
 
-    private GameObject CreateCoopPadsSprites(LevelEntity shipPadEntity) {
+    private GameObject CreateCoopPadsSprites(LevelEntity shipPadEntity)
+    {
         SpriteRenderer newPrefab = Instantiate(LevelEditorCursor.Singletron.template, LevelEditorCursor.Singletron.transform.parent);
         newPrefab.sprite = Resources.Load<Sprite>(shipPadEntity.spriteName);
         newPrefab.color = Color.white;
@@ -295,37 +349,45 @@ public class LevelEditorManager : MonoBehaviour {
         return newPrefab.gameObject;
     }
 
-    public void ToggleCoop() {
+    public void ToggleCoop()
+    {
         bool isCoop = levelData.IsCoopLevel(); //toggle the bool
 
-        if (isCoop) {
+        if (isCoop)
+        {
             toggleCoopText.text = "Change To Coop";
 
             //here we delete the two old coop-launch and landing pads level entities becuase we are switching the level from a coop level to a singleplayer level
             List<LevelObject> objectsToDelete = new List<LevelObject>();
 
-            foreach(LevelObject levelObject in levelData.levelData){
-                if (levelObject.spriteName.EndsWith("Launch Pad Static Sprite") || levelObject.spriteName.EndsWith("Land Pad Static Sprite")) {
-                    if (levelObject.canOverrideDelete) {
+            foreach (LevelObject levelObject in levelData.levelData)
+            {
+                if (levelObject.spriteName.EndsWith("Launch Pad Static Sprite") || levelObject.spriteName.EndsWith("Land Pad Static Sprite"))
+                {
+                    if (levelObject.canOverrideDelete)
+                    {
                         Destroy(levelObject.gameObject); //destroy the actual physical gameobject
                         objectsToDelete.Add(levelObject);
                     }
                 }
             }
 
-            foreach(LevelObject @object in objectsToDelete) {
+            foreach (LevelObject @object in objectsToDelete)
+            {
                 levelData.levelData.Remove(@object);
             }
             objectsToDelete = null;
-        } else {
+        }
+        else
+        {
             toggleCoopText.text = "Change To Singleplayer";
 
             GameObject launchpad = CreateCoopPadsSprites(coopLaunchPadEntity); //entity gameobject is set inside CreateCoopPadsSprites
             GameObject landPad = CreateCoopPadsSprites(coopLandingPadEntity); //entity gameobject is set inside CreateCoopPadsSprites
 
-            LevelEntity newLaunchPad = (LevelEntity) coopLaunchPadEntity.GetDeepCopy();
+            LevelEntity newLaunchPad = (LevelEntity)coopLaunchPadEntity.GetDeepCopy();
             newLaunchPad.gameObject = launchpad;
-            LevelEntity newLandPad = (LevelEntity) coopLandingPadEntity.GetDeepCopy();
+            LevelEntity newLandPad = (LevelEntity)coopLandingPadEntity.GetDeepCopy();
             newLandPad.gameObject = landPad;
 
             levelData.levelData.Add(newLaunchPad);
@@ -333,9 +395,10 @@ public class LevelEditorManager : MonoBehaviour {
         }
     }
 
-    public void PlaytestLevel() {
+    public void PlaytestLevel()
+    {
         var currentLevelDir = LevelEditorSaveMenu.GetCurrentLevelFileDirectory();
-        if(currentLevelDir != null) File.WriteAllText(Application.persistentDataPath + "/Level Editor/tempLevelPath.txt", currentLevelDir);
+        if (currentLevelDir != null) File.WriteAllText(Application.persistentDataPath + "/Level Editor/tempLevelPath.txt", currentLevelDir);
 
         string tempLevelPath = Application.persistentDataPath + "/Level Editor/tempLevel.level";
         FileStream file = File.Open(tempLevelPath, FileMode.OpenOrCreate);
@@ -347,7 +410,8 @@ public class LevelEditorManager : MonoBehaviour {
         SceneManager.LoadScene("Game Level");
     }
 
-    public void OpenConditionsGuideWebPage() {
+    public void OpenConditionsGuideWebPage()
+    {
         Steamworks.SteamFriends.ActivateGameOverlayToWebPage("https://galacticlander.zerobyter.net/workshop/conditions");
     }
 }

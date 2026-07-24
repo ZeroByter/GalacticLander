@@ -6,17 +6,20 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Text.RegularExpressions;
 
-public class TileFamily {
+public class TileFamily
+{
     public string name;
     public int count;
 
-    public static string SpriteNameToFamilyName(string spriteName) {
+    public static string SpriteNameToFamilyName(string spriteName)
+    {
         Regex rx = new Regex(@" \d$");
         return rx.Replace(spriteName, "");
     }
 }
 
-public class LevelEditorCursor : MonoBehaviour {
+public class LevelEditorCursor : MonoBehaviour
+{
 
     public static LevelEditorCursor Singletron;
 
@@ -81,36 +84,43 @@ public class LevelEditorCursor : MonoBehaviour {
         return Singletron.movingEntityData != null;
     }
 
-    private TileFamily GetTileFamily(string name) {
-        foreach (TileFamily tileFamily in tileFamilies) {
+    private TileFamily GetTileFamily(string name)
+    {
+        foreach (TileFamily tileFamily in tileFamilies)
+        {
             if (tileFamily.name == name) return tileFamily;
         }
 
         return null;
     }
 
-    private Sprite GetRandomSpriteFromFamily(string familyName) {
+    private Sprite GetRandomSpriteFromFamily(string familyName)
+    {
         TileFamily family = GetTileFamily(familyName);
 
         int currentSpriteIndex = 0;
 
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < 30; i++)
+        {
             int newIndex = Random.Range(0, family.count - 1);
 
-            if (newIndex != currentSpriteIndex) {
+            if (newIndex != currentSpriteIndex)
+            {
                 currentSpriteIndex = newIndex;
             }
         }
         string randomName = family.name + " " + currentSpriteIndex;
 
-        foreach (Sprite spr in sprites) {
+        foreach (Sprite spr in sprites)
+        {
             if (spr.name == randomName) return spr;
         }
 
         return null;
     }
 
-    private void Awake() {
+    private void Awake()
+    {
         Singletron = this;
 
         entityLayer = LayerMask.GetMask("Entity");
@@ -119,14 +129,16 @@ public class LevelEditorCursor : MonoBehaviour {
 
         Regex rx = new Regex(@" \d$");
 
-        foreach (Sprite sprite in sprites) {
+        foreach (Sprite sprite in sprites)
+        {
             if (sprite.name.StartsWith("Filled Tile")) continue;
 
             string familyName = rx.Replace(sprite.name, "");
 
             //in order to get name of tile, take name of sprite and remove the last number in it (use regex? idk)
             TileFamily family = GetTileFamily(familyName);
-            if (family == null) {
+            if (family == null)
+            {
                 family = new TileFamily() { name = familyName };
                 tileFamilies.Add(family);
             }
@@ -135,16 +147,21 @@ public class LevelEditorCursor : MonoBehaviour {
         }
     }
 
-    private void Update() {
-        if (!EventSystem.current.IsPointerOverGameObject()) {
+    private void Update()
+    {
+        if (!EventSystem.current.IsPointerOverGameObject())
+        {
             Vector2 mousePos = MainCameraController.Singletron.selfCamera.ScreenToWorldPoint(Input.mousePosition);
             Vector2 screenPos;
+            bool isCameraPanning = LevelEditorManager.IsCameraPanningInputActive();
 
             LevelEditorBrushPreviewController.SetPosition(mousePos);
 
             //cancel editing level when pressing escape
-            if ((prefab != null || eraser) && Input.GetKeyDown(KeyCode.Escape) && LastPressedEscape.LastPressedEscapeCooldownOver(0.1f)) {
-                if (prefab != null && movingEntityData != null) {
+            if ((prefab != null || eraser) && Input.GetKeyDown(KeyCode.Escape) && LastPressedEscape.LastPressedEscapeCooldownOver(0.1f))
+            {
+                if (prefab != null && movingEntityData != null)
+                {
                     prefab.transform.position = movingEntityData.GetPosition();
                 }
                 SetPrefab(null, null);
@@ -155,10 +172,12 @@ public class LevelEditorCursor : MonoBehaviour {
             }
 
             //eraser code
-            if (Input.GetMouseButton(0) && eraser) {
+            if (!isCameraPanning && Input.GetMouseButton(0) && eraser)
+            {
                 RaycastHit2D rayHit = Physics2D.Raycast(mousePos, Vector2.zero);
 
-                if (rayHit.collider != null) {
+                if (rayHit.collider != null)
+                {
                     LevelData data = LevelEditorManager.GetLevelData();
                     LevelObject @object = data.GetObjectAtPosition(rayHit.transform.position);
 
@@ -167,7 +186,8 @@ public class LevelEditorCursor : MonoBehaviour {
                         LevelEditorTutorialManager.TriedToDeletePads();
                     }
 
-                    if (@object != null && (@object.canAdvancedModify)) {
+                    if (@object != null && (@object.canAdvancedModify))
+                    {
                         LevelEditorLinesController.DestroyAllLinesWithTarget(rayHit.transform);
                         LevelEditorLinesController.DestroyAllLinesWithSource(rayHit.transform);
 
@@ -177,13 +197,18 @@ public class LevelEditorCursor : MonoBehaviour {
                         RefreshTilesLayout();
                     }
                 }
-            } else {
+            }
+            else
+            {
                 //if we have neither a prefab or a sprite selected at the moment and we pressed the left mouse button
-                if (prefab == null && Input.GetMouseButtonDown(0) && Time.time > lastMouseClick + 0.2f) {
-                    if (Input.GetKey(KeyCode.LeftAlt)) { //if we are holding down the left alt key while left clicking
+                if (!isCameraPanning && prefab == null && Input.GetMouseButtonDown(0) && Time.time > lastMouseClick + 0.2f)
+                {
+                    if (Input.GetKey(KeyCode.LeftAlt))
+                    { //if we are holding down the left alt key while left clicking
                         RaycastHit2D rayHit = Physics2D.Raycast(mousePos, Vector2.zero, 10000, entityLayer); //do a raycast
 
-                        if (rayHit.collider != null && rayHit.transform.gameObject.layer == 11) { //if we hit something and it was an entity
+                        if (rayHit.collider != null && rayHit.transform.gameObject.layer == 11)
+                        { //if we hit something and it was an entity
                             LevelData data = LevelEditorManager.GetLevelData(); //get the level data
                             LevelObject objectHit = data.GetObjectAtPosition(rayHit.transform.position, true);
                             if (objectHit is LevelEntity)
@@ -219,14 +244,18 @@ public class LevelEditorCursor : MonoBehaviour {
                                 }
                             }
                         }
-                    } else { //if not holding down left alt key
+                    }
+                    else
+                    { //if not holding down left alt key
                         RaycastHit2D rayHit = Physics2D.Raycast(mousePos, Vector2.zero, 10000, entityLayer); //do a raycast
 
-                        if (rayHit.collider != null) { //if we hit something
+                        if (rayHit.collider != null)
+                        { //if we hit something
                             LevelData data = LevelEditorManager.GetLevelData(); //get the level data
                             LevelObject @object = data.GetObjectAtPosition(rayHit.transform.position); //find the object we hit
 
-                            if (rayHit.transform.gameObject.layer == 11 && @object != null && @object is LevelEntity) { //if we hit an entity
+                            if (rayHit.transform.gameObject.layer == 11 && @object != null && @object is LevelEntity)
+                            { //if we hit an entity
                                 prefab = rayHit.transform.gameObject;
                                 movingEntityData = (LevelEntity)@object;
                                 lastMouseClick = Time.time;
@@ -242,10 +271,12 @@ public class LevelEditorCursor : MonoBehaviour {
                 }
 
                 //if we pressed the left alt key
-                if (Input.GetKeyDown(KeyCode.LeftAlt)) {
+                if (Input.GetKeyDown(KeyCode.LeftAlt))
+                {
                     holdingDownAlt = true;
 
-                    if (prefab != null && movingEntityData != null) {
+                    if (prefab != null && movingEntityData != null)
+                    {
                         prefab.transform.position = movingEntityData.GetPosition();
                     }
 
@@ -258,7 +289,8 @@ public class LevelEditorCursor : MonoBehaviour {
                 }
 
                 //when we let go of the left alt key
-                if (Input.GetKeyUp(KeyCode.LeftAlt)) {
+                if (Input.GetKeyUp(KeyCode.LeftAlt))
+                {
                     holdingDownAlt = false;
 
                     firstEntityLogicLinking = null;
@@ -269,12 +301,16 @@ public class LevelEditorCursor : MonoBehaviour {
                 }
 
                 //if we have a prefab currently selected
-                if (prefab != null && movingEntityData != null) {
+                if (prefab != null && movingEntityData != null)
+                {
                     UpdateBrushPreviewVisible();
 
-                    if (movingEntityData.lockedToGrid) {
+                    if (movingEntityData.lockedToGrid)
+                    {
                         screenPos = new Vector2(Mathf.Round(transform.parent.InverseTransformPoint(mousePos).x + 0.5f) - 0.5f, Mathf.Round(transform.parent.InverseTransformPoint(mousePos).y + 0.5f) - 0.5f);
-                    } else {
+                    }
+                    else
+                    {
                         screenPos = new Vector2(transform.parent.InverseTransformPoint(mousePos).x, transform.parent.InverseTransformPoint(mousePos).y);
                     }
 
@@ -285,11 +321,11 @@ public class LevelEditorCursor : MonoBehaviour {
                     if (holdingDownQ) SetRotation(rotation + 175 * Time.deltaTime);
                     if (holdingDownE) SetRotation(rotation - 175 * Time.deltaTime);
 
-                    if(holdingDownQ && holdingDownE)
+                    if (holdingDownQ && holdingDownE)
                     {
                         if (startedHoldingDownBothQE == 0) startedHoldingDownBothQE = Time.time;
-                        
-                        if(Time.time - startedHoldingDownBothQE > 0.75f)
+
+                        if (Time.time - startedHoldingDownBothQE > 0.75f)
                         {
                             SetRotation(0);
                         }
@@ -304,7 +340,8 @@ public class LevelEditorCursor : MonoBehaviour {
                         SetRotation(Mathf.Clamp(rotation, -45, 45));
                     }
 
-                    if (movingEntityData.canAdvancedModify) {
+                    if (movingEntityData.canAdvancedModify)
+                    {
                         if (Input.GetKeyDown(KeyCode.A)) ToggleEraser();
                     }
 
@@ -312,8 +349,10 @@ public class LevelEditorCursor : MonoBehaviour {
                     prefab.transform.localPosition = screenPos;
 
                     //if we press the mouse left click we place down the prefab, store it's location information, and remove it from our variables
-                    if (Input.GetMouseButtonDown(0) && Time.time > lastMouseClick + 0.2f) {
-                        if (movingEntityData != null) { //if we somehow lost the entity data or something
+                    if (!isCameraPanning && Input.GetMouseButtonDown(0) && Time.time > lastMouseClick + 0.2f)
+                    {
+                        if (movingEntityData != null)
+                        { //if we somehow lost the entity data or something
                             movingEntityData.x = screenPos.x;
                             movingEntityData.y = screenPos.y;
                             movingEntityData.scaleX = prefab.transform.localScale.x;
@@ -328,19 +367,24 @@ public class LevelEditorCursor : MonoBehaviour {
                             lastMouseClick = Time.time;
                         }
                     }
-                } else {
+                }
+                else
+                {
                     screenPos = new Vector2(Mathf.Round(transform.parent.InverseTransformPoint(mousePos).x + 0.5f) - 0.5f, Mathf.Round(transform.parent.InverseTransformPoint(mousePos).y + 0.5f) - 0.5f);
 
-                    if (Input.GetKeyDown(KeyCode.Q)) {
+                    if (Input.GetKeyDown(KeyCode.Q))
+                    {
                         OffsetRotateTileUnder(90);
                     }
-                    if (Input.GetKeyDown(KeyCode.E)) {
+                    if (Input.GetKeyDown(KeyCode.E))
+                    {
                         OffsetRotateTileUnder(-90);
                     }
                     if (Input.GetKeyDown(KeyCode.A)) ToggleEraser();
 
                     //here we actually place the new tile
-                    if ((Input.GetMouseButton(0) || Input.GetMouseButton(1)) && placeTiles) {
+                    if (((!isCameraPanning && Input.GetMouseButton(0)) || Input.GetMouseButton(1)) && placeTiles)
+                    {
                         var inversePoint = transform.parent.InverseTransformPoint(mousePos);
                         var levelScreenPos = new Vector2(Mathf.InverseLerp(-18, 18, inversePoint.x), Mathf.InverseLerp(-18, 18, inversePoint.y)) * 150f;
 
@@ -411,7 +455,8 @@ public class LevelEditorCursor : MonoBehaviour {
                     UpdateBrushPreviewVisible();
                 }
 
-                if (Input.GetKey(KeyCode.LeftAlt)) {
+                if (Input.GetKey(KeyCode.LeftAlt))
+                {
                     screenPos = new Vector2(transform.parent.InverseTransformPoint(mousePos).x, transform.parent.InverseTransformPoint(mousePos).y);
                 }
 
@@ -420,7 +465,8 @@ public class LevelEditorCursor : MonoBehaviour {
             }
         }
 
-        if ((Input.GetKeyUp(KeyCode.Mouse0) || Input.GetKeyUp(KeyCode.Mouse1)) && prefab == null && CursorController.GetUser("EditorLinkLogicEntities") == null) {
+        if ((Input.GetKeyUp(KeyCode.Mouse0) || Input.GetKeyUp(KeyCode.Mouse1)) && prefab == null && CursorController.GetUser("EditorLinkLogicEntities") == null)
+        {
             placeTiles = true;
         }
     }
@@ -433,14 +479,17 @@ public class LevelEditorCursor : MonoBehaviour {
     /// <summary>
     /// applies rotational offset to the tile underneath the cursor
     /// </summary>
-    private void OffsetRotateTileUnder(float offset) {
+    private void OffsetRotateTileUnder(float offset)
+    {
         Vector2 mousePos = MainCameraController.Singletron.selfCamera.ScreenToWorldPoint(Input.mousePosition);
         RaycastHit2D rayHit = Physics2D.Raycast(mousePos, Vector2.zero);
 
-        if (rayHit.collider != null) {
+        if (rayHit.collider != null)
+        {
             LevelData data = LevelEditorManager.GetLevelData();
             LevelObject @object = data.GetObjectAtPosition(rayHit.transform.position);
-            if (@object != null && @object.canAdvancedModify && @object.GetType() == typeof(LevelTile)) {
+            if (@object != null && @object.canAdvancedModify && @object.GetType() == typeof(LevelTile))
+            {
                 @object.rotationOffset += offset;
 
                 RefreshTilesLayout();
@@ -452,7 +501,8 @@ public class LevelEditorCursor : MonoBehaviour {
     /// Doesn't include other tiles
     /// </summary>
     /// <param name="point"></param>
-    private Vector2 GetNeighborTileInLevel(Vector2 point) {
+    private Vector2 GetNeighborTileInLevel(Vector2 point)
+    {
         LevelData levelData = LevelEditorManager.GetLevelData();
 
         Vector2 above = point + Vector2.up;
@@ -473,7 +523,8 @@ public class LevelEditorCursor : MonoBehaviour {
     /// </summary>
     /// <param name="point"></param>
     /// <returns></returns>
-    private bool IsPointInbetweenTwoTiles(Vector2 point) {
+    private bool IsPointInbetweenTwoTiles(Vector2 point)
+    {
         LevelData levelData = LevelEditorManager.GetLevelData();
         Vector2[] tiles = levelData.GetTiles().ToArray();
 
@@ -516,7 +567,8 @@ public class LevelEditorCursor : MonoBehaviour {
         }
     }*/
 
-    private Vector2 GetCornerNeighborTile(Vector2 point) {
+    private Vector2 GetCornerNeighborTile(Vector2 point)
+    {
         LevelData levelData = LevelEditorManager.GetLevelData();
         Vector2[] tiles = levelData.GetTiles().ToArray();
 
@@ -533,7 +585,8 @@ public class LevelEditorCursor : MonoBehaviour {
         return point;
     }
 
-    private Vector2 GetEdgeNeighborTile(Vector2 point) {
+    private Vector2 GetEdgeNeighborTile(Vector2 point)
+    {
         LevelData levelData = LevelEditorManager.GetLevelData();
         Vector2[] tiles = levelData.GetTiles().ToArray();
 
@@ -550,7 +603,8 @@ public class LevelEditorCursor : MonoBehaviour {
         return point;
     }
 
-    private bool IsTallTileNearby(Vector2 point, out bool twoNearbyTiles, out LevelTile nearbyTile) {
+    private bool IsTallTileNearby(Vector2 point, out bool twoNearbyTiles, out LevelTile nearbyTile)
+    {
         LevelData levelData = LevelEditorManager.GetLevelData();
         levelData.SortTilesList();
 
@@ -561,32 +615,42 @@ public class LevelEditorCursor : MonoBehaviour {
 
         List<LevelTile> returnTiles = new List<LevelTile>();
 
-        foreach (LevelTile tile in levelData.levelTiles) {
-            if (returnTiles.Count < 2) {
-                if (tile.GetPosition() == above || tile.GetPosition() == below || tile.GetPosition() == right || tile.GetPosition() == left) {
-                    if (tile.isTall) {
+        foreach (LevelTile tile in levelData.levelTiles)
+        {
+            if (returnTiles.Count < 2)
+            {
+                if (tile.GetPosition() == above || tile.GetPosition() == below || tile.GetPosition() == right || tile.GetPosition() == left)
+                {
+                    if (tile.isTall)
+                    {
                         returnTiles.Add(tile);
                     }
                 }
             }
         }
 
-        if(returnTiles.Count == 0) {
+        if (returnTiles.Count == 0)
+        {
             twoNearbyTiles = false;
             nearbyTile = null;
             return false;
-        } else if(returnTiles.Count == 1) {
+        }
+        else if (returnTiles.Count == 1)
+        {
             twoNearbyTiles = false;
             nearbyTile = returnTiles[0];
             return true;
-        } else { //two tiles found
+        }
+        else
+        { //two tiles found
             twoNearbyTiles = true;
             nearbyTile = null;
             return true;
         }
     }
 
-    private void RefreshTilesLayout() {
+    private void RefreshTilesLayout()
+    {
         LevelData data = LevelEditorManager.Singletron.levelData;
 
         data.SortTilesList();
@@ -597,46 +661,61 @@ public class LevelEditorCursor : MonoBehaviour {
 
         //first foreach loop/pass
         //this simply creates every flat ground tile based on what neighbor positions around this tile are inside the level
-        foreach (GameObject tileGameObject in GameObject.FindGameObjectsWithTag("Level")) {
+        foreach (GameObject tileGameObject in GameObject.FindGameObjectsWithTag("Level"))
+        {
             Vector2 tilePos = tileGameObject.transform.position;
             SpriteRenderer spriteRenderer = tileGameObject.GetComponent<SpriteRenderer>();
             LevelObjectHolder objectHolder = tileGameObject.GetComponent<LevelObjectHolder>();
 
             tileGameObject.transform.eulerAngles = Vector3.zero;
 
-            if (IsPointInbetweenTwoTiles(tilePos)) { //if this point is directly inbetween two tiles make tile face towards the level
+            if (IsPointInbetweenTwoTiles(tilePos))
+            { //if this point is directly inbetween two tiles make tile face towards the level
                 Vector2 neighborTileInLevel = GetNeighborTileInLevel(tilePos);
-                if (neighborTileInLevel != tilePos) { //if this tile has a neighbor tile in level than create flat ground
+                if (neighborTileInLevel != tilePos)
+                { //if this tile has a neighbor tile in level than create flat ground
                     Vector2 dir = neighborTileInLevel - tilePos;
                     float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90 + objectHolder.levelTile.rotationOffset;
 
                     tileGameObject.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
 
-                    if (objectHolder.levelTile.isTall) {
+                    if (objectHolder.levelTile.isTall)
+                    {
                         if (TileFamily.SpriteNameToFamilyName(spriteRenderer.sprite.name) != "Tall Flat Ground") spriteRenderer.sprite = GetRandomSpriteFromFamily("Tall Flat Ground"); //only update the tile sprite if we are changing it to something else
                         tilesWithSprites.Add(tileGameObject);
                         tileGameObject.transform.localScale = new Vector2(1, tileGameObject.transform.localScale.y);
-                    } else {
+                    }
+                    else
+                    {
                         bool twoNearbyTiles;
                         LevelTile nearbyTallTile;
-                        if (IsTallTileNearby(tilePos, out twoNearbyTiles, out nearbyTallTile)) {
-                            if (twoNearbyTiles) {
+                        if (IsTallTileNearby(tilePos, out twoNearbyTiles, out nearbyTallTile))
+                        {
+                            if (twoNearbyTiles)
+                            {
                                 if (TileFamily.SpriteNameToFamilyName(spriteRenderer.sprite.name) != "Tall Flat Ground") spriteRenderer.sprite = GetRandomSpriteFromFamily("Tall Flat Ground");
                                 tilesWithSprites.Add(tileGameObject);
                                 tileGameObject.transform.localScale = new Vector2(1, tileGameObject.transform.localScale.y);
-                            } else {
+                            }
+                            else
+                            {
                                 if (TileFamily.SpriteNameToFamilyName(spriteRenderer.sprite.name) != "Flat To Tall Flat") spriteRenderer.sprite = GetRandomSpriteFromFamily("Flat To Tall Flat");
                                 tilesWithSprites.Add(tileGameObject);
 
                                 Vector2 inversedPoint = tileGameObject.transform.InverseTransformPoint(nearbyTallTile.GetPosition());
                                 inversedPoint = new Vector2(inversedPoint.x * tileGameObject.transform.localScale.x, inversedPoint.y);
-                                if (Mathf.Approximately(Mathf.Round(inversedPoint.x), -1)) {
+                                if (Mathf.Approximately(Mathf.Round(inversedPoint.x), -1))
+                                {
                                     tileGameObject.transform.localScale = new Vector2(-1, tileGameObject.transform.localScale.y);
-                                } else {
+                                }
+                                else
+                                {
                                     tileGameObject.transform.localScale = new Vector2(1, tileGameObject.transform.localScale.y);
                                 }
                             }
-                        } else {
+                        }
+                        else
+                        {
                             if (TileFamily.SpriteNameToFamilyName(spriteRenderer.sprite.name) != "Flat Ground") spriteRenderer.sprite = GetRandomSpriteFromFamily("Flat Ground");
                             tilesWithSprites.Add(tileGameObject);
                             tileGameObject.transform.localScale = new Vector2(1, tileGameObject.transform.localScale.y);
@@ -653,47 +732,62 @@ public class LevelEditorCursor : MonoBehaviour {
 
         //second foreach loop/pass
         //this creates every corner/edge
-        foreach (GameObject tileGameObject in GameObject.FindGameObjectsWithTag("Level")) {
+        foreach (GameObject tileGameObject in GameObject.FindGameObjectsWithTag("Level"))
+        {
             Vector2 tilePos = tileGameObject.transform.position;
             SpriteRenderer spriteRenderer = tileGameObject.GetComponent<SpriteRenderer>();
             LevelObjectHolder objectHolder = tileGameObject.GetComponent<LevelObjectHolder>();
 
             Vector2 neighborTileInLevel = GetNeighborTileInLevel(tilePos);
 
-            if (neighborTileInLevel == tilePos) {
+            if (neighborTileInLevel == tilePos)
+            {
                 Vector2 neighborCornerTile = GetCornerNeighborTile(tilePos);
 
-                if (neighborCornerTile != tilePos) { //if we found a corner tile neighbor
+                if (neighborCornerTile != tilePos)
+                { //if we found a corner tile neighbor
                     Vector2 dir = neighborCornerTile - tilePos; //angle to nearest tile
                     float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90 + objectHolder.levelTile.rotationOffset; //adjust the angle a bit...
 
                     tileGameObject.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
 
-                    if (objectHolder.levelTile.isTall) {
+                    if (objectHolder.levelTile.isTall)
+                    {
                         if (TileFamily.SpriteNameToFamilyName(spriteRenderer.sprite.name) != "Tall-Tall Corner") spriteRenderer.sprite = GetRandomSpriteFromFamily("Tall-Tall Corner");
                         tilesWithSprites.Add(tileGameObject);
                         tileGameObject.transform.localScale = new Vector2(1, tileGameObject.transform.localScale.y);
-                    } else {
+                    }
+                    else
+                    {
                         bool twoNearbyTiles;
                         LevelTile nearbyTallTile;
-                        if (IsTallTileNearby(tilePos, out twoNearbyTiles, out nearbyTallTile)) {
-                            if (twoNearbyTiles) {
+                        if (IsTallTileNearby(tilePos, out twoNearbyTiles, out nearbyTallTile))
+                        {
+                            if (twoNearbyTiles)
+                            {
                                 if (TileFamily.SpriteNameToFamilyName(spriteRenderer.sprite.name) != "Tall-Tall Corner") spriteRenderer.sprite = GetRandomSpriteFromFamily("Tall-Tall Corner");
                                 tilesWithSprites.Add(tileGameObject);
                                 tileGameObject.transform.localScale = new Vector2(1, tileGameObject.transform.localScale.y);
-                            } else {
+                            }
+                            else
+                            {
                                 if (TileFamily.SpriteNameToFamilyName(spriteRenderer.sprite.name) != "Tall Corner") spriteRenderer.sprite = GetRandomSpriteFromFamily("Tall Corner");
                                 tilesWithSprites.Add(tileGameObject);
 
                                 Vector2 inversedPoint = tileGameObject.transform.InverseTransformPoint(nearbyTallTile.GetPosition());
-                                if (Mathf.Approximately(Mathf.Round(inversedPoint.y), 1)) {
+                                if (Mathf.Approximately(Mathf.Round(inversedPoint.y), 1))
+                                {
                                     tileGameObject.transform.localScale = new Vector2(-1, tileGameObject.transform.localScale.y);
                                     angle -= 90;
-                                } else {
+                                }
+                                else
+                                {
                                     tileGameObject.transform.localScale = new Vector2(1, tileGameObject.transform.localScale.y);
                                 }
                             }
-                        } else {
+                        }
+                        else
+                        {
                             if (TileFamily.SpriteNameToFamilyName(spriteRenderer.sprite.name) != "Corner") spriteRenderer.sprite = GetRandomSpriteFromFamily("Corner");
                             tilesWithSprites.Add(tileGameObject);
                             tileGameObject.transform.localScale = new Vector2(1, tileGameObject.transform.localScale.y);
@@ -707,40 +801,55 @@ public class LevelEditorCursor : MonoBehaviour {
                     objectHolder.levelTile.scaleY = tileGameObject.transform.localScale.y;
                     objectHolder.levelTile.spriteName = spriteRenderer.sprite.name;
                 }
-            } else {
+            }
+            else
+            {
                 Vector2 neighborEdgeTile = GetEdgeNeighborTile(tilePos);
 
-                if (neighborEdgeTile != tilePos) { //if we found a corner tile neighbor
+                if (neighborEdgeTile != tilePos)
+                { //if we found a corner tile neighbor
                     Vector2 dir = neighborEdgeTile - tilePos;
                     float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg + 90 + objectHolder.levelTile.rotationOffset;
 
                     tileGameObject.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
 
-                    if (objectHolder.levelTile.isTall) {
+                    if (objectHolder.levelTile.isTall)
+                    {
                         if (TileFamily.SpriteNameToFamilyName(spriteRenderer.sprite.name) != "Tall-Tall Edge") spriteRenderer.sprite = GetRandomSpriteFromFamily("Tall-Tall Edge");
                         tilesWithSprites.Add(tileGameObject);
                         tileGameObject.transform.localScale = new Vector2(1, tileGameObject.transform.localScale.y);
-                    } else {
+                    }
+                    else
+                    {
                         bool twoNearbyTiles;
                         LevelTile nearbyTallTile;
-                        if (IsTallTileNearby(tilePos, out twoNearbyTiles, out nearbyTallTile)) {
-                            if (twoNearbyTiles) {
+                        if (IsTallTileNearby(tilePos, out twoNearbyTiles, out nearbyTallTile))
+                        {
+                            if (twoNearbyTiles)
+                            {
                                 if (TileFamily.SpriteNameToFamilyName(spriteRenderer.sprite.name) != "Tall-Tall Edge") spriteRenderer.sprite = GetRandomSpriteFromFamily("Tall-Tall Edge");
                                 tilesWithSprites.Add(tileGameObject);
                                 tileGameObject.transform.localScale = new Vector2(1, tileGameObject.transform.localScale.y);
-                            } else {
+                            }
+                            else
+                            {
                                 if (TileFamily.SpriteNameToFamilyName(spriteRenderer.sprite.name) != "Tall Edge") spriteRenderer.sprite = GetRandomSpriteFromFamily("Tall Edge");
                                 tilesWithSprites.Add(tileGameObject);
 
                                 Vector2 inversedPoint = tileGameObject.transform.InverseTransformPoint(nearbyTallTile.GetPosition());
-                                if (Mathf.Approximately(Mathf.Round(inversedPoint.y), -1)) {
+                                if (Mathf.Approximately(Mathf.Round(inversedPoint.y), -1))
+                                {
                                     tileGameObject.transform.localScale = new Vector2(-1, tileGameObject.transform.localScale.y);
                                     angle -= 90;
-                                } else {
+                                }
+                                else
+                                {
                                     tileGameObject.transform.localScale = new Vector2(1, tileGameObject.transform.localScale.y);
                                 }
                             }
-                        } else {
+                        }
+                        else
+                        {
                             if (TileFamily.SpriteNameToFamilyName(spriteRenderer.sprite.name) != "Edge") spriteRenderer.sprite = GetRandomSpriteFromFamily("Edge");
                             tilesWithSprites.Add(tileGameObject);
                             tileGameObject.transform.localScale = new Vector2(1, tileGameObject.transform.localScale.y);
@@ -757,22 +866,26 @@ public class LevelEditorCursor : MonoBehaviour {
             }
         }
 
-        foreach (GameObject tileGameObject in GameObject.FindGameObjectsWithTag("Level")) {
+        foreach (GameObject tileGameObject in GameObject.FindGameObjectsWithTag("Level"))
+        {
             Vector2 tilePos = tileGameObject.transform.position;
             SpriteRenderer spriteRenderer = tileGameObject.GetComponent<SpriteRenderer>();
             LevelObjectHolder objectHolder = tileGameObject.GetComponent<LevelObjectHolder>();
 
-            if (!tilesWithSprites.Contains(tileGameObject)) {
+            if (!tilesWithSprites.Contains(tileGameObject))
+            {
                 spriteRenderer.sprite = sprites.First(x => x.name == "Filled Tile");
                 objectHolder.levelTile.spriteName = spriteRenderer.sprite.name;
             }
         }
     }
 
-    public static void SetPrefab(LevelEntity entityData, Sprite sprite) {
+    public static void SetPrefab(LevelEntity entityData, Sprite sprite)
+    {
         SetRotation(0);
 
-        if (entityData != null) {
+        if (entityData != null)
+        {
             SpriteRenderer newPrefab = Instantiate(Singletron.template, Singletron.transform.parent);
             newPrefab.sprite = sprite;
             newPrefab.color = Color.white;
@@ -793,29 +906,37 @@ public class LevelEditorCursor : MonoBehaviour {
             Singletron.placeTiles = false;
 
             Singletron.SetEraser(false);
-        } else {
+        }
+        else
+        {
             //if(Singletron.prefab != null) Destroy(Singletron.prefab);
             Singletron.prefab = null;
         }
     }
 
-    public static void SetRotation(float rotation) {
+    public static void SetRotation(float rotation)
+    {
         Singletron.rotation = rotation;
         Vector3 euler = Singletron.transform.eulerAngles;
         euler.z = rotation;
         Singletron.transform.eulerAngles = euler;
 
-        if (Singletron.prefab != null) {
+        if (Singletron.prefab != null)
+        {
             Singletron.prefab.transform.eulerAngles = euler;
         }
     }
 
-    public void SetEraser(bool active) {
+    public void SetEraser(bool active)
+    {
         eraser = active;
 
-        if (eraser) {
+        if (eraser)
+        {
             CursorController.AddUser("editorEraser", CursorUser.Type.EditorEraser);
-        } else {
+        }
+        else
+        {
             CursorController.RemoveUser("editorEraser");
         }
 
@@ -823,7 +944,8 @@ public class LevelEditorCursor : MonoBehaviour {
         LevelEditorControlsManager.UpdateUI();
     }
 
-    public void ToggleEraser() {
+    public void ToggleEraser()
+    {
         SetEraser(!eraser);
     }
 
