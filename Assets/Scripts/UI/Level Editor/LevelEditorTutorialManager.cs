@@ -50,8 +50,9 @@ public class LevelEditorTutorialManager : MonoBehaviour
     private int lastTutorialStage = 0;
     private int tutorialStage = 0;
     private bool enableTutorial = false;
+    private bool advanceTutorialStageOnNextClick = false;
 
-    private Image nextStageButtonImage;
+    private CanvasGroup nextStageButtonCanvasGroup;
 
     [ConVar]
     public static int LevelEditorTutorial_Stage
@@ -1151,7 +1152,7 @@ public class LevelEditorTutorialManager : MonoBehaviour
     {
         Singleton = this;
 
-        nextStageButtonImage = nextStageButton.GetComponent<Image>();
+        nextStageButtonCanvasGroup = nextStageButton.transform.parent.GetComponent<CanvasGroup>();
 
         tutorialTextCanvasGroup.ForceAlpha(0);
 
@@ -1173,7 +1174,7 @@ public class LevelEditorTutorialManager : MonoBehaviour
     private void SetNextStageButtonInteractable(bool interactable)
     {
         nextStageButton.interactable = interactable;
-        nextStageButtonImage.raycastTarget = interactable;
+        nextStageButtonCanvasGroup.blocksRaycasts = interactable;
     }
 
     private void Start()
@@ -1222,6 +1223,7 @@ public class LevelEditorTutorialManager : MonoBehaviour
 
         if (Singleton.enableTutorial)
         {
+            Singleton.advanceTutorialStageOnNextClick = false;
             ShowTutorialText("Hey! Don't delete either the landing or launch pads! We still need those! (Click to continue)");
             SteamCustomUtils.SetLevelEditorAchievement("DONT_DELETE_THAT");
             Singleton.SetNextStageButtonInteractable(true);
@@ -1245,55 +1247,63 @@ public class LevelEditorTutorialManager : MonoBehaviour
 
     private void UpdateTutorialText()
     {
+        advanceTutorialStageOnNextClick = false;
+
         switch (tutorialStage)
         {
             case 0:
-                ShowTutorialText("Hello! Let's start by carving out our level! Hold down the left mouse button while selecting either the 'remove' or 'add' tools with either the '1' or '2' keys on the top of your keyboard. I highlighted where you should remove terrain so that we can continue.");
-                terrainGuidesParent.SetActive(true);
+                shouldFollowWorktablePosition = false;
+                ShowTutorialText("Hello! Before we start building, you can pan the camera with the middle mouse button, or by holding space while dragging with the left mouse button. Click to continue.");
+                SetNextStageButtonInteractable(true);
+                advanceTutorialStageOnNextClick = true;
                 break;
             case 1:
+                ShowTutorialText("Let's start by carving out our level! Hold down the left mouse button while selecting either the 'remove' or 'add' tools with either the '1' or '2' keys on the top of your keyboard. I highlighted where you should remove terrain so that we can continue.");
+                terrainGuidesParent.SetActive(true);
+                break;
+            case 2:
                 ShowTutorialText("Excellent! Now let's move the landing pad to it's correct place, highlighted by the red fading icon to the right.");
                 terrainGuidesParent.SetActive(false);
                 landHalo.SetActive(true);
 
                 shouldFollowWorktablePosition = true;
                 break;
-            case 2:
+            case 3:
                 shouldFollowWorktablePosition = false;
                 landHalo.SetActive(false);
                 crateHalo.SetActive(true);
                 CursorController.RemoveUser("HoverPointer");
                 ShowTutorialText("Place down a cute little Crate right above the launch pad, I think that would be a great spot for it! Click the icon-button titled 'crate' from the left panel and place the crate down at the highlighted area.");
                 break;
-            case 3:
+            case 4:
                 shouldFollowWorktablePosition = true;
                 followWorktablePosition = doorHalo.transform.position + new Vector3(0, -3);
                 crateHalo.SetActive(false);
                 doorHalo.SetActive(true);
                 ShowTutorialText("Let's also place down a door in the middle of the level, in-between the launch and landing pad.");
                 break;
-            case 4:
+            case 5:
                 doorHalo.SetActive(false);
                 followWorktablePosition = sensorHalo.transform.position + new Vector3(0, -1);
                 ShowTutorialText("Great! Now we need a way to open the door. Place down a 'ship sensor pad' at the highlighted location (or anywhere else in the level, keep in mind the player will need a way to get to the sensor).");
                 sensorHalo.SetActive(true);
                 break;
-            case 5:
+            case 6:
                 sensorHalo.SetActive(false);
                 followWorktablePosition = Vector2.Lerp(sensorHalo.transform.position, doorHalo.transform.position, 0.5f);
                 followWorktablePosition.y = -1;
                 ShowTutorialText("Now, if only the door and ship sensor were connected somehow! Select the 'linker' tool with the '4' key and click on the ship sensor, then on the door.");
                 break;
-            case 6:
+            case 7:
                 shouldFollowWorktablePosition = false;
                 ShowTutorialText("Huh? Who placed that crate above the launch pad? That seems like a terrible idea! Select the eraser with the '3' key to delete the crate.");
                 break;
-            case 7:
+            case 8:
                 SetNextStageButtonInteractable(true);
                 shouldFollowWorktablePosition = false;
                 ShowTutorialText("All done! If the level is enough to your liking, save your level by pressing 'CTRL+S', press 'escape' and click the 'playtest' button at the top of the screen!");
                 break;
-            case 14:
+            case 15:
                 ShowTutorialText("That's it... There is nothing else here...");
                 break;
             default:
@@ -1387,54 +1397,56 @@ public class LevelEditorTutorialManager : MonoBehaviour
         switch (tutorialStage)
         {
             case 0:
+                break;
+            case 1:
                 bool launchPadsInsideLevel;
                 bool landingPadsInsideLevel;
                 GetIfPadsInsideLevel(out launchPadsInsideLevel, out landingPadsInsideLevel);
 
                 if (launchPadsInsideLevel && landingPadsInsideLevel && DoesTutorialLevelMatchGuide()) tutorialStage++;
                 break;
-            case 1:
+            case 2:
                 if (Vector2.Distance(levelData.GetLandPad().GetPosition(), new Vector2(12.33f, -0.62f)) < 0.1 && !LevelEditorCursor.IsCurrentlyMovingObject()) tutorialStage++;
                 break;
-            case 2:
+            case 3:
                 var crateObj = GetEntityAtArea(new Vector2(0f, 2f), 0.5f);
                 if (crateObj != null && crateObj.resourceName == "Crate/Crate")
                 {
                     tutorialStage++;
                 }
                 break;
-            case 3:
+            case 4:
                 var doorObj = GetEntityAtPosition(new Vector2(6.37f, 1.94f));
                 if (doorObj != null && doorObj.resourceName == "Door/Door")
                 {
                     tutorialStage++;
                 }
                 break;
-            case 4:
+            case 5:
                 var sensorObj = GetEntityAtArea(new Vector2(2.8f, 0.2f), 0.5f);
                 if (sensorObj != null && sensorObj.resourceName == "Ship Pads/Ship Sensor Pad")
                 {
                     tutorialStage++;
                 }
                 break;
-            case 5:
+            case 6:
                 var doorEntity = GetEntityAtPosition(new Vector2(6.37f, 1.94f));
                 var sensorEntity = GetEntityAtArea(new Vector2(2.8f, 0.2f), 0.5f);
 
                 if (doorEntity == null)
                 {
-                    tutorialStage = 3;
+                    tutorialStage = 4;
                     return;
                 }
                 if (sensorEntity == null)
                 {
-                    tutorialStage = 4;
+                    tutorialStage = 5;
                     return;
                 }
 
                 if (sensorEntity.logicTarget == doorEntity) tutorialStage++;
                 break;
-            case 6:
+            case 7:
                 if (GetEntityAtArea(new Vector2(0f, 2f), 0.5f) == null) tutorialStage++;
                 break;
         }
@@ -1442,6 +1454,11 @@ public class LevelEditorTutorialManager : MonoBehaviour
 
     public void OnTutorialPanelNextStageClick()
     {
+        if (advanceTutorialStageOnNextClick)
+        {
+            tutorialStage++;
+        }
+
         UpdateTutorialText();
         SetNextStageButtonInteractable(false);
     }
@@ -1450,7 +1467,7 @@ public class LevelEditorTutorialManager : MonoBehaviour
     {
         if (enableTutorial)
         {
-            if (tutorialStage == 1)
+            if (tutorialStage == 2)
             {
                 Vector2 realLandPadPos = theRealLandPad.transform.position;
                 Vector2 haloLandPadPos = landHalo.transform.position;
