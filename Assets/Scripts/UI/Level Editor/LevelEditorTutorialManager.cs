@@ -1335,12 +1335,17 @@ public class LevelEditorTutorialManager : MonoBehaviour
 
     private bool DoesTutorialLevelMatchGuide()
     {
+        var pointsMatchingCount = 0;
+
         foreach (var p in tutorialEmptyPositions)
         {
-            if (LevelEditorManager.GetLevelData().IsPointInLevelNew(p / 150 * 36f)) return false;
+            if (!LevelEditorManager.GetLevelData().IsPointInLevelNew(p / 150 * 36f))
+            {
+                pointsMatchingCount += 1;
+            }
         }
 
-        return true;
+        return pointsMatchingCount > tutorialEmptyPositions.Length - 10;
     }
 
     private LevelEntity GetEntityAtPosition(Vector2 point)

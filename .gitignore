@@ -62,3 +62,5 @@ Builds/steamcmd/**
 Builds/galacticlander*/**
 
 Graphics/**
+
+Packages/com.singularitygroup.hotreload
