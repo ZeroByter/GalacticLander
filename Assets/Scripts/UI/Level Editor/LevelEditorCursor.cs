@@ -20,21 +20,70 @@ public class TileFamily
 
 public class LevelEditorCursor : MonoBehaviour
 {
+    public enum Tool
+    {
+        AddTerrain,
+        RemoveTerrain,
+        Eraser,
+        LinkEntities
+    }
 
     public static LevelEditorCursor Singletron;
+
+    public static bool IsAddTerrainSelected()
+    {
+        if (Singletron == null) return true;
+
+        return Singletron.selectedTool == Tool.AddTerrain;
+    }
+
+    public static bool IsRemoveTerrainSelected()
+    {
+        if (Singletron == null) return false;
+
+        return Singletron.selectedTool == Tool.RemoveTerrain;
+    }
 
     public static bool IsEraserSelected()
     {
         if (Singletron == null) return false;
 
-        return Singletron.eraser;
+        return Singletron.selectedTool == Tool.Eraser;
+    }
+
+    public static bool IsLinkerSelected()
+    {
+        if (Singletron == null) return false;
+
+        return Singletron.selectedTool == Tool.LinkEntities;
+    }
+
+    public static void SelectAddTerrainTool()
+    {
+        if (Singletron == null) return;
+
+        Singletron.SetSelectedTool(Tool.AddTerrain);
+    }
+
+    public static void SelectRemoveTerrainTool()
+    {
+        if (Singletron == null) return;
+
+        Singletron.SetSelectedTool(Tool.RemoveTerrain);
     }
 
     public static void SetEraserSelected(bool selected)
     {
         if (Singletron == null) return;
 
-        Singletron.SetEraser(selected);
+        Singletron.SetSelectedTool(selected ? Tool.Eraser : Tool.AddTerrain);
+    }
+
+    public static void SelectLinkerTool()
+    {
+        if (Singletron == null) return;
+
+        Singletron.SetSelectedTool(Tool.LinkEntities);
     }
 
     public static void SetBrushHardness(float newValue, float minValue, float maxValue)
@@ -61,11 +110,10 @@ public class LevelEditorCursor : MonoBehaviour
     private LayerMask entityLayer;
 
     private LevelEntity firstEntityLogicLinking;
-    private bool holdingDownAlt = false;
 
     private float rotation;
-    private bool eraser;
     private float lastMouseClick;
+    private Tool selectedTool;
 
     private bool placeTiles = true;
 
@@ -149,30 +197,34 @@ public class LevelEditorCursor : MonoBehaviour
 
     private void Update()
     {
+        HandleToolSelectionShortcuts();
+
         if (!EventSystem.current.IsPointerOverGameObject())
         {
             Vector2 mousePos = MainCameraController.Singletron.selfCamera.ScreenToWorldPoint(Input.mousePosition);
             Vector2 screenPos;
             bool isCameraPanning = LevelEditorManager.IsCameraPanningInputActive();
+            bool linkerSelected = selectedTool == Tool.LinkEntities;
+            bool eraserSelected = selectedTool == Tool.Eraser;
 
             LevelEditorBrushPreviewController.SetPosition(mousePos);
 
             //cancel editing level when pressing escape
-            if ((prefab != null || eraser) && Input.GetKeyDown(KeyCode.Escape) && LastPressedEscape.LastPressedEscapeCooldownOver(0.1f))
+            if ((prefab != null || selectedTool != Tool.AddTerrain) && Input.GetKeyDown(KeyCode.Escape) && LastPressedEscape.LastPressedEscapeCooldownOver(0.1f))
             {
                 if (prefab != null && movingEntityData != null)
                 {
                     prefab.transform.position = movingEntityData.GetPosition();
                 }
                 SetPrefab(null, null);
-                SetEraser(false);
+                SetSelectedTool(Tool.AddTerrain);
                 LastPressedEscape.SetPressedEscape();
 
                 UpdateBrushPreviewVisible();
             }
 
             //eraser code
-            if (!isCameraPanning && Input.GetMouseButton(0) && eraser)
+            if (!isCameraPanning && Input.GetMouseButton(0) && eraserSelected)
             {
                 RaycastHit2D rayHit = Physics2D.Raycast(mousePos, Vector2.zero);
 
@@ -203,8 +255,8 @@ public class LevelEditorCursor : MonoBehaviour
                 //if we have neither a prefab or a sprite selected at the moment and we pressed the left mouse button
                 if (!isCameraPanning && prefab == null && Input.GetMouseButtonDown(0) && Time.time > lastMouseClick + 0.2f)
                 {
-                    if (Input.GetKey(KeyCode.LeftAlt))
-                    { //if we are holding down the left alt key while left clicking
+                    if (linkerSelected)
+                    {
                         RaycastHit2D rayHit = Physics2D.Raycast(mousePos, Vector2.zero, 10000, entityLayer); //do a raycast
 
                         if (rayHit.collider != null && rayHit.transform.gameObject.layer == 11)
@@ -270,36 +322,6 @@ public class LevelEditorCursor : MonoBehaviour
                     UpdateBrushPreviewVisible();
                 }
 
-                //if we pressed the left alt key
-                if (Input.GetKeyDown(KeyCode.LeftAlt))
-                {
-                    holdingDownAlt = true;
-
-                    if (prefab != null && movingEntityData != null)
-                    {
-                        prefab.transform.position = movingEntityData.GetPosition();
-                    }
-
-                    firstEntityLogicLinking = null;
-                    SetPrefab(null, null);
-                    CursorController.AddUser("EditorLinkLogicEntities", CursorUser.Type.EditorLinkLogicEntities);
-                    LevelEditorLinesController.DestroyAllLinesWithTarget(transform);
-
-                    UpdateBrushPreviewVisible();
-                }
-
-                //when we let go of the left alt key
-                if (Input.GetKeyUp(KeyCode.LeftAlt))
-                {
-                    holdingDownAlt = false;
-
-                    firstEntityLogicLinking = null;
-                    CursorController.RemoveUser("EditorLinkLogicEntities");
-                    LevelEditorLinesController.DestroyAllLinesWithTarget(transform);
-
-                    UpdateBrushPreviewVisible();
-                }
-
                 //if we have a prefab currently selected
                 if (prefab != null && movingEntityData != null)
                 {
@@ -342,7 +364,6 @@ public class LevelEditorCursor : MonoBehaviour
 
                     if (movingEntityData.canAdvancedModify)
                     {
-                        if (Input.GetKeyDown(KeyCode.A)) ToggleEraser();
                     }
 
                     //set the moving prefab to cursor location
@@ -380,16 +401,16 @@ public class LevelEditorCursor : MonoBehaviour
                     {
                         OffsetRotateTileUnder(-90);
                     }
-                    if (Input.GetKeyDown(KeyCode.A)) ToggleEraser();
 
                     //here we actually place the new tile
-                    if (((!isCameraPanning && Input.GetMouseButton(0)) || Input.GetMouseButton(1)) && placeTiles)
+                    bool terrainToolSelected = selectedTool == Tool.AddTerrain || selectedTool == Tool.RemoveTerrain;
+                    if (!isCameraPanning && Input.GetMouseButton(0) && placeTiles && terrainToolSelected)
                     {
                         var inversePoint = transform.parent.InverseTransformPoint(mousePos);
                         var levelScreenPos = new Vector2(Mathf.InverseLerp(-18, 18, inversePoint.x), Mathf.InverseLerp(-18, 18, inversePoint.y)) * 150f;
 
                         var offset = brushHardness * Time.deltaTime;
-                        if (!Input.GetMouseButton(1)) offset *= -1f;
+                        if (selectedTool == Tool.RemoveTerrain) offset *= -1f;
 
                         MarchingSquaresManager.AddValues(levelScreenPos, brushSize, offset);
                         MarchingSquaresManager.GenerateMeshAndCollisions();
@@ -455,7 +476,7 @@ public class LevelEditorCursor : MonoBehaviour
                     UpdateBrushPreviewVisible();
                 }
 
-                if (Input.GetKey(KeyCode.LeftAlt))
+                if (linkerSelected)
                 {
                     screenPos = new Vector2(transform.parent.InverseTransformPoint(mousePos).x, transform.parent.InverseTransformPoint(mousePos).y);
                 }
@@ -465,15 +486,36 @@ public class LevelEditorCursor : MonoBehaviour
             }
         }
 
-        if ((Input.GetKeyUp(KeyCode.Mouse0) || Input.GetKeyUp(KeyCode.Mouse1)) && prefab == null && CursorController.GetUser("EditorLinkLogicEntities") == null)
+        if ((Input.GetKeyUp(KeyCode.Mouse0) || Input.GetKeyUp(KeyCode.Mouse1)) && prefab == null && selectedTool != Tool.LinkEntities)
         {
             placeTiles = true;
         }
     }
 
+    private void HandleToolSelectionShortcuts()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            SetSelectedTool(Tool.RemoveTerrain);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            SetSelectedTool(Tool.AddTerrain);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            SetSelectedTool(Tool.Eraser);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            SetSelectedTool(Tool.LinkEntities);
+        }
+    }
+
     private void UpdateBrushPreviewVisible()
     {
-        LevelEditorBrushPreviewController.SetVisible(!holdingDownAlt && !eraser && movingEntityData == null && prefab == null);
+        bool terrainToolSelected = selectedTool == Tool.AddTerrain || selectedTool == Tool.RemoveTerrain;
+        LevelEditorBrushPreviewController.SetVisible(terrainToolSelected && movingEntityData == null && prefab == null);
     }
 
     /// <summary>
@@ -905,7 +947,7 @@ public class LevelEditorCursor : MonoBehaviour
 
             Singletron.placeTiles = false;
 
-            Singletron.SetEraser(false);
+            Singletron.SetSelectedTool(Tool.AddTerrain);
         }
         else
         {
@@ -929,24 +971,46 @@ public class LevelEditorCursor : MonoBehaviour
 
     public void SetEraser(bool active)
     {
-        eraser = active;
-
-        if (eraser)
-        {
-            CursorController.AddUser("editorEraser", CursorUser.Type.EditorEraser);
-        }
-        else
-        {
-            CursorController.RemoveUser("editorEraser");
-        }
-
-        UpdateBrushPreviewVisible();
-        LevelEditorControlsManager.UpdateUI();
+        SetSelectedTool(active ? Tool.Eraser : Tool.AddTerrain);
     }
 
     public void ToggleEraser()
     {
-        SetEraser(!eraser);
+        SetSelectedTool(selectedTool == Tool.Eraser ? Tool.AddTerrain : Tool.Eraser);
+    }
+
+    private void SetSelectedTool(Tool newTool)
+    {
+        if (prefab != null && movingEntityData != null)
+        {
+            prefab.transform.position = movingEntityData.GetPosition();
+        }
+
+        if (prefab != null)
+        {
+            SetPrefab(null, null);
+        }
+
+        firstEntityLogicLinking = null;
+        LevelEditorLinesController.DestroyAllLinesWithTarget(transform);
+        CursorController.RemoveUser("editorEraser");
+        CursorController.RemoveUser("EditorLinkLogicEntities");
+
+        selectedTool = newTool;
+
+        if (selectedTool == Tool.Eraser)
+        {
+            CursorController.AddUser("editorEraser", CursorUser.Type.EditorEraser);
+        }
+        else if (selectedTool == Tool.LinkEntities)
+        {
+            CursorController.AddUser("EditorLinkLogicEntities", CursorUser.Type.EditorLinkLogicEntities);
+        }
+
+        placeTiles = true;
+        movingEntityData = null;
+        UpdateBrushPreviewVisible();
+        LevelEditorControlsManager.UpdateUI();
     }
 
     private void _SetBrushSize(float newSize)

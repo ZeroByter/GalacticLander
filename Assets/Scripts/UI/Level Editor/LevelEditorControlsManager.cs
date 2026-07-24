@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class LevelEditorControlsManager : MonoBehaviour
@@ -16,11 +15,17 @@ public class LevelEditorControlsManager : MonoBehaviour
     [SerializeField]
     private GameObject brushSelectionIndicator;
     [SerializeField]
+    private Button selectRemoveBrushButton;
+    [SerializeField]
+    private GameObject selectRemoveBrushIndicator;
+    [SerializeField]
+    private Button selectAddBrushButton;
+    [SerializeField]
+    private GameObject selectAddBrushIndicator;
+    [SerializeField]
     private Slider brushHardnessSlider;
     [SerializeField]
     private Slider brushSizeSlider;
-    [SerializeField]
-    private Button selectBrushButton;
 
     [Space]
     [SerializeField]
@@ -28,11 +33,19 @@ public class LevelEditorControlsManager : MonoBehaviour
     [SerializeField]
     private Button selectEraserButton;
 
+    [Space]
+    [SerializeField]
+    private GameObject linkerSelectionIndicator;
+    [SerializeField]
+    private Button selectLinkerButton;
+
     private void Awake()
     {
         Singleton = this;
 
-        selectBrushButton.onClick.AddListener(HandleSelectBrushClick);
+        selectRemoveBrushButton.onClick.AddListener(HandleSelectRemoveBrushClick);
+        selectAddBrushButton.onClick.AddListener(HandleSelectAddBrushClick);
+        selectLinkerButton.onClick.AddListener(HandleSelectLinkerClick);
         brushHardnessSlider.onValueChanged.AddListener(HandleBrushHardnessChange);
         brushSizeSlider.onValueChanged.AddListener(HandleBrushSizeChange);
 
@@ -47,18 +60,19 @@ public class LevelEditorControlsManager : MonoBehaviour
         LevelEditorCursor.SetBrushHardness(brushHardnessSlider.value, brushHardnessSlider.minValue, brushHardnessSlider.maxValue);
     }
 
-    private void OnDestroy()
+    private void HandleSelectRemoveBrushClick()
     {
-        selectBrushButton.onClick.RemoveListener(HandleSelectBrushClick);
-        brushHardnessSlider.onValueChanged.RemoveListener(HandleBrushHardnessChange);
-        brushSizeSlider.onValueChanged.RemoveListener(HandleBrushSizeChange);
-
-        selectEraserButton.onClick.RemoveListener(HandleSelectEraserClick);
+        LevelEditorCursor.SelectRemoveTerrainTool();
     }
 
-    private void HandleSelectBrushClick()
+    private void HandleSelectAddBrushClick()
     {
-        LevelEditorCursor.SetEraserSelected(false);
+        LevelEditorCursor.SelectAddTerrainTool();
+    }
+
+    private void HandleSelectLinkerClick()
+    {
+        LevelEditorCursor.SelectLinkerTool();
     }
 
     private void HandleBrushHardnessChange(float newValue)
@@ -78,9 +92,24 @@ public class LevelEditorControlsManager : MonoBehaviour
 
     private void _UpdateUI()
     {
-        var eraserSelected = LevelEditorCursor.IsEraserSelected();
+        var brushSelected = LevelEditorCursor.IsAddTerrainSelected() || LevelEditorCursor.IsRemoveTerrainSelected();
 
-        eraserSelectionIndicator.SetActive(eraserSelected);
-        brushSelectionIndicator.SetActive(!eraserSelected);
+        selectRemoveBrushIndicator.SetActive(LevelEditorCursor.IsRemoveTerrainSelected());
+        selectAddBrushIndicator.SetActive(LevelEditorCursor.IsAddTerrainSelected());
+
+        brushSelectionIndicator.SetActive(brushSelected);
+        eraserSelectionIndicator.SetActive(LevelEditorCursor.IsEraserSelected());
+        linkerSelectionIndicator.SetActive(LevelEditorCursor.IsLinkerSelected());
+    }
+
+    private void OnDestroy()
+    {
+        selectRemoveBrushButton.onClick.RemoveListener(HandleSelectRemoveBrushClick);
+        selectAddBrushButton.onClick.RemoveListener(HandleSelectAddBrushClick);
+        selectLinkerButton.onClick.RemoveListener(HandleSelectLinkerClick);
+        brushHardnessSlider.onValueChanged.RemoveListener(HandleBrushHardnessChange);
+        brushSizeSlider.onValueChanged.RemoveListener(HandleBrushSizeChange);
+
+        selectEraserButton.onClick.RemoveListener(HandleSelectEraserClick);
     }
 }
