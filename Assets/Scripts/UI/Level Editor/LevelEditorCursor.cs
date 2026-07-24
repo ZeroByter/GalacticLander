@@ -327,14 +327,7 @@ public class LevelEditorCursor : MonoBehaviour
                 {
                     UpdateBrushPreviewVisible();
 
-                    if (movingEntityData.lockedToGrid)
-                    {
-                        screenPos = new Vector2(Mathf.Round(transform.parent.InverseTransformPoint(mousePos).x + 0.5f) - 0.5f, Mathf.Round(transform.parent.InverseTransformPoint(mousePos).y + 0.5f) - 0.5f);
-                    }
-                    else
-                    {
-                        screenPos = new Vector2(transform.parent.InverseTransformPoint(mousePos).x, transform.parent.InverseTransformPoint(mousePos).y);
-                    }
+                    screenPos = GetCursorPlacementPosition(movingEntityData);
 
                     //typical rotation and mirroring things
                     var holdingDownQ = Input.GetKey(KeyCode.Q);
@@ -366,11 +359,11 @@ public class LevelEditorCursor : MonoBehaviour
                     {
                     }
 
-                    //set the moving prefab to cursor location
-                    prefab.transform.localPosition = screenPos;
+                    SnapMovingEntityToCursor();
+                    screenPos = prefab.transform.localPosition;
 
-                    //if we press the mouse left click we place down the prefab, store it's location information, and remove it from our variables
-                    if (!isCameraPanning && Input.GetMouseButtonDown(0) && Time.time > lastMouseClick + 0.2f)
+                    //place the entity when the current left-mouse interaction is released
+                    if (!isCameraPanning && Input.GetMouseButtonUp(0) && Time.time > lastMouseClick + 0.05f)
                     {
                         if (movingEntityData != null)
                         { //if we somehow lost the entity data or something
@@ -496,11 +489,11 @@ public class LevelEditorCursor : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            SetSelectedTool(Tool.RemoveTerrain);
+            SetSelectedTool(Tool.AddTerrain);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha2))
         {
-            SetSelectedTool(Tool.AddTerrain);
+            SetSelectedTool(Tool.RemoveTerrain);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha3))
         {
@@ -516,6 +509,36 @@ public class LevelEditorCursor : MonoBehaviour
     {
         bool terrainToolSelected = selectedTool == Tool.AddTerrain || selectedTool == Tool.RemoveTerrain;
         LevelEditorBrushPreviewController.SetVisible(terrainToolSelected && movingEntityData == null && prefab == null);
+    }
+
+    private Vector2 GetCursorPlacementPosition(LevelEntity entityData)
+    {
+        Vector2 mousePos = MainCameraController.Singletron.selfCamera.ScreenToWorldPoint(Input.mousePosition);
+        Vector3 localPoint = transform.parent.InverseTransformPoint(mousePos);
+
+        if (entityData != null && entityData.lockedToGrid)
+        {
+            return new Vector2(Mathf.Round(localPoint.x + 0.5f) - 0.5f, Mathf.Round(localPoint.y + 0.5f) - 0.5f);
+        }
+
+        return new Vector2(localPoint.x, localPoint.y);
+    }
+
+    private void SnapMovingEntityToCursor()
+    {
+        if (prefab == null || movingEntityData == null)
+        {
+            return;
+        }
+
+        Vector2 screenPos = GetCursorPlacementPosition(movingEntityData);
+
+        prefab.transform.localPosition = screenPos;
+        movingEntityData.x = screenPos.x;
+        movingEntityData.y = screenPos.y;
+        movingEntityData.scaleX = prefab.transform.localScale.x;
+        movingEntityData.scaleY = prefab.transform.localScale.y;
+        movingEntityData.rotation = prefab.transform.rotation.eulerAngles.z;
     }
 
     /// <summary>
@@ -928,6 +951,8 @@ public class LevelEditorCursor : MonoBehaviour
 
         if (entityData != null)
         {
+            Singletron.SetSelectedTool(Tool.AddTerrain);
+
             SpriteRenderer newPrefab = Instantiate(Singletron.template, Singletron.transform.parent);
             newPrefab.sprite = sprite;
             newPrefab.color = Color.white;
@@ -941,13 +966,13 @@ public class LevelEditorCursor : MonoBehaviour
             LevelData data = LevelEditorManager.GetLevelData();
             data.levelData.Add(entityData);
             entityData.ActivatedEditor(newPrefab.gameObject);
+            Singletron.SnapMovingEntityToCursor();
+            Singletron.lastMouseClick = Time.time;
 
             LevelEditorLinesController.DestroyAllLinesWithTarget(Singletron.transform);
             Singletron.firstEntityLogicLinking = null;
 
             Singletron.placeTiles = false;
-
-            Singletron.SetSelectedTool(Tool.AddTerrain);
         }
         else
         {

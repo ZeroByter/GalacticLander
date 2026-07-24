@@ -1248,7 +1248,7 @@ public class LevelEditorTutorialManager : MonoBehaviour
         switch (tutorialStage)
         {
             case 0:
-                ShowTutorialText("Hello! Let's start by carving out our level! Hold down the left mouse button to remove terrain, and the right mouse button to place it back. I highlighted where you should remove terrain so that we can continue.");
+                ShowTutorialText("Hello! Let's start by carving out our level! Hold down the left mouse button while selecting either the 'remove' or 'add' tools with either the '1' or '2' keys on the top of your keyboard. I highlighted where you should remove terrain so that we can continue.");
                 terrainGuidesParent.SetActive(true);
                 break;
             case 1:
@@ -1282,11 +1282,11 @@ public class LevelEditorTutorialManager : MonoBehaviour
                 sensorHalo.SetActive(false);
                 followWorktablePosition = Vector2.Lerp(sensorHalo.transform.position, doorHalo.transform.position, 0.5f);
                 followWorktablePosition.y = -1;
-                ShowTutorialText("Now, if only the door and ship sensor were connected somehow! Hold down the left-alt key and click on the ship sensor, then on the door, and let go of the alt key to logic-connect the door and the ship sensor.");
+                ShowTutorialText("Now, if only the door and ship sensor were connected somehow! Select the 'linker' tool with the '4' key and click on the ship sensor, then on the door.");
                 break;
             case 6:
                 shouldFollowWorktablePosition = false;
-                ShowTutorialText("Huh? Who placed that crate above the launch pad? That seems like a terrible idea! In order to delete it, either select 'eraser' from the center bottom panel, or press 'A' to select the eraser, and delete the crate");
+                ShowTutorialText("Huh? Who placed that crate above the launch pad? That seems like a terrible idea! Select the eraser with the '3' key to delete the crate.");
                 break;
             case 7:
                 SetNextStageButtonInteractable(true);
